@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"product0/internal/domain"
+	domainpkg "product0/internal/domain"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,13 +18,13 @@ func NewTenantRepository(db *gorm.DB) *TenantRepository {
 }
 
 // Create creates a new tenant
-func (r *TenantRepository) Create(tenant *domain.Tenant) error {
+func (r *TenantRepository) Create(tenant *domainpkg.Tenant) error {
 	return r.db.Create(tenant).Error
 }
 
 // GetByID retrieves a tenant by ID
-func (r *TenantRepository) GetByID(id uuid.UUID) (*domain.Tenant, error) {
-	var tenant domain.Tenant
+func (r *TenantRepository) GetByID(id uuid.UUID) (*domainpkg.Tenant, error) {
+	var tenant domainpkg.Tenant
 	if err := r.db.First(&tenant, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
@@ -32,8 +32,8 @@ func (r *TenantRepository) GetByID(id uuid.UUID) (*domain.Tenant, error) {
 }
 
 // GetByDomain retrieves a tenant by domain
-func (r *TenantRepository) GetByDomain(domain string) (*domain.Tenant, error) {
-	var tenant domain.Tenant
+func (r *TenantRepository) GetByDomain(domain string) (*domainpkg.Tenant, error) {
+	var tenant domainpkg.Tenant
 	if err := r.db.First(&tenant, "domain = ?", domain).Error; err != nil {
 		return nil, err
 	}
@@ -41,13 +41,13 @@ func (r *TenantRepository) GetByDomain(domain string) (*domain.Tenant, error) {
 }
 
 // Update updates a tenant
-func (r *TenantRepository) Update(tenant *domain.Tenant) error {
+func (r *TenantRepository) Update(tenant *domainpkg.Tenant) error {
 	return r.db.Save(tenant).Error
 }
 
 // List retrieves all tenants
-func (r *TenantRepository) List() ([]domain.Tenant, error) {
-	var tenants []domain.Tenant
+func (r *TenantRepository) List() ([]domainpkg.Tenant, error) {
+	var tenants []domainpkg.Tenant
 	if err := r.db.Find(&tenants).Error; err != nil {
 		return nil, err
 	}
@@ -56,5 +56,5 @@ func (r *TenantRepository) List() ([]domain.Tenant, error) {
 
 // Delete deletes a tenant
 func (r *TenantRepository) Delete(id uuid.UUID) error {
-	return r.db.Delete(&domain.Tenant{}, "id = ?", id).Error
+	return r.db.Delete(&domainpkg.Tenant{}, "id = ?", id).Error
 }
