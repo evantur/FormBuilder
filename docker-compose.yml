@@ -39,9 +39,6 @@ services:
       JWT_EXPIRY_HOURS: 24
     ports:
       - "8080:8080"
-    volumes:
-      - ./backend:/app
-    command: go run ./cmd/server/main.go
 
 volumes:
   postgres_data:
