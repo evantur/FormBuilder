@@ -1,4 +1,4 @@
-module github.com/evantur/Product_0/backend
+module product0
 
 go 1.21
 

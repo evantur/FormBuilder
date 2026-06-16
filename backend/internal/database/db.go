@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/evantur/Product_0/backend/internal/domain"
+	"product0/internal/domain"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

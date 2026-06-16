@@ -2,12 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/evantur/Product_0/backend/internal/auth"
-	"github.com/evantur/Product_0/backend/internal/domain"
-	"github.com/evantur/Product_0/backend/internal/service"
+	"product0/internal/auth"
+	"product0/internal/domain"
+	"product0/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -24,23 +24,23 @@ func NewFormHandler(formService *service.FormService) *FormHandler {
 
 // FormRequest represents a create/update form request
 type FormRequest struct {
-	Title       string                 `json:"title" binding:"required"`
-	Description string                 `json:"description"`
-	Fields      []domain.FormField     `json:"fields" binding:"required"`
-	Status      string                 `json:"status"`
+	Title       string             `json:"title" binding:"required"`
+	Description string             `json:"description"`
+	Fields      []domain.FormField `json:"fields" binding:"required"`
+	Status      string             `json:"status"`
 }
 
 // FormResponse represents a form response
 type FormResponse struct {
-	ID          string                 `json:"id"`
-	TenantID    string                 `json:"tenant_id"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Fields      []domain.FormField     `json:"fields"`
-	Status      string                 `json:"status"`
-	CreatedBy   string                 `json:"created_by"`
-	CreatedAt   string                 `json:"created_at"`
-	UpdatedAt   string                 `json:"updated_at"`
+	ID          string             `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Fields      []domain.FormField `json:"fields"`
+	Status      string             `json:"status"`
+	CreatedBy   string             `json:"created_by"`
+	CreatedAt   string             `json:"created_at"`
+	UpdatedAt   string             `json:"updated_at"`
 }
 
 // CreateForm creates a new form

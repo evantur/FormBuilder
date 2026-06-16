@@ -3,8 +3,9 @@ package handler
 import (
 	"net/http"
 
-	"github.com/evantur/Product_0/backend/internal/auth"
-	"github.com/evantur/Product_0/backend/internal/service"
+	"product0/internal/auth"
+	"product0/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

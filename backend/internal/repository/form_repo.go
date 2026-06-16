@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"github.com/evantur/Product_0/backend/internal/domain"
+	"product0/internal/domain"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
