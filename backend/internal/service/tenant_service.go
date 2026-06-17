@@ -20,16 +20,16 @@ func NewTenantService(repo *repository.TenantRepository) *TenantService {
 }
 
 // CreateTenant creates a new tenant
-func (s *TenantService) CreateTenant(name, domain string, createdBy uuid.UUID) (*domainpkg.Tenant, error) {
+func (s *TenantService) CreateTenant(name, domain string, id uuid.UUID) (*domainpkg.Tenant, error) {
 	if name == "" {
 		return nil, fmt.Errorf("tenant name is required")
 	}
 
 	tenant := &domainpkg.Tenant{
-		ID:        uuid.New(),
+		ID:        id,
 		Name:      name,
 		Domain:    domain,
-		CreatedBy: createdBy,
+		CreatedBy: id,
 	}
 
 	if err := s.repo.Create(tenant); err != nil {
