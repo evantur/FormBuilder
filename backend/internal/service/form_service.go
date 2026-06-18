@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/evantur/Product_0/backend/internal/domain"
-	"github.com/evantur/Product_0/backend/internal/repository"
+	"product0/internal/domain"
+	"product0/internal/repository"
+
 	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
@@ -33,13 +34,13 @@ func (s *FormService) CreateForm(tenantID, userID uuid.UUID, title, description 
 	}
 
 	form := &domain.Form{
-		ID:        uuid.New(),
-		TenantID:  tenantID,
-		Title:     title,
+		ID:          uuid.New(),
+		TenantID:    tenantID,
+		Title:       title,
 		Description: description,
-		Fields:    fieldsJSON,
-		Status:    domain.FormStatusDraft,
-		CreatedBy: userID,
+		Fields:      fieldsJSON,
+		Status:      domain.FormStatusDraft,
+		CreatedBy:   userID,
 	}
 
 	if err := s.repo.Create(form); err != nil {
@@ -142,11 +143,11 @@ func convertFieldsToJSON(fields []domain.FormField) (datatypes.JSON, error) {
 		return datatypes.JSON("[]"), nil
 	}
 
-	// Marshal tojson.Marshal(fields)
+	// Marshal fields to JSON
+	data, err := json.Marshal(fields)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal fields: %w", err)
 	}
 
-	return datatypes.JSON(data)ll be imported at the top level
-	return nil, nil
+	return datatypes.JSON(data), nil
 }

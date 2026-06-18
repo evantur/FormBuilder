@@ -3,8 +3,9 @@ package service
 import (
 	"fmt"
 
-	"github.com/evantur/Product_0/backend/internal/domain"
-	"github.com/evantur/Product_0/backend/internal/repository"
+	"product0/internal/domain"
+	"product0/internal/repository"
+
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )

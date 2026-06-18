@@ -3,8 +3,9 @@ package service
 import (
 	"fmt"
 
-	"github.com/evantur/Product_0/backend/internal/domain"
-	"github.com/evantur/Product_0/backend/internal/repository"
+	domainpkg "product0/internal/domain"
+	"product0/internal/repository"
+
 	"github.com/google/uuid"
 )
 
@@ -19,16 +20,16 @@ func NewTenantService(repo *repository.TenantRepository) *TenantService {
 }
 
 // CreateTenant creates a new tenant
-func (s *TenantService) CreateTenant(name, domain string, createdBy uuid.UUID) (*domain.Tenant, error) {
+func (s *TenantService) CreateTenant(name, domain string, id uuid.UUID) (*domainpkg.Tenant, error) {
 	if name == "" {
 		return nil, fmt.Errorf("tenant name is required")
 	}
 
-	tenant := &domain.Tenant{
-		ID:        uuid.New(),
+	tenant := &domainpkg.Tenant{
+		ID:        id,
 		Name:      name,
 		Domain:    domain,
-		CreatedBy: createdBy,
+		CreatedBy: id,
 	}
 
 	if err := s.repo.Create(tenant); err != nil {
@@ -39,7 +40,7 @@ func (s *TenantService) CreateTenant(name, domain string, createdBy uuid.UUID) (
 }
 
 // GetTenant retrieves a tenant by ID
-func (s *TenantService) GetTenant(id uuid.UUID) (*domain.Tenant, error) {
+func (s *TenantService) GetTenant(id uuid.UUID) (*domainpkg.Tenant, error) {
 	tenant, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, fmt.Errorf("tenant not found: %w", err)
@@ -48,7 +49,7 @@ func (s *TenantService) GetTenant(id uuid.UUID) (*domain.Tenant, error) {
 }
 
 // GetTenantByDomain retrieves a tenant by domain
-func (s *TenantService) GetTenantByDomain(domain string) (*domain.Tenant, error) {
+func (s *TenantService) GetTenantByDomain(domain string) (*domainpkg.Tenant, error) {
 	tenant, err := s.repo.GetByDomain(domain)
 	if err != nil {
 		return nil, fmt.Errorf("tenant not found: %w", err)
@@ -57,7 +58,7 @@ func (s *TenantService) GetTenantByDomain(domain string) (*domain.Tenant, error)
 }
 
 // ListTenants lists all tenants
-func (s *TenantService) ListTenants() ([]domain.Tenant, error) {
+func (s *TenantService) ListTenants() ([]domainpkg.Tenant, error) {
 	tenants, err := s.repo.List()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tenants: %w", err)
@@ -66,7 +67,7 @@ func (s *TenantService) ListTenants() ([]domain.Tenant, error) {
 }
 
 // UpdateTenant updates a tenant
-func (s *TenantService) UpdateTenant(tenant *domain.Tenant) (*domain.Tenant, error) {
+func (s *TenantService) UpdateTenant(tenant *domainpkg.Tenant) (*domainpkg.Tenant, error) {
 	if err := s.repo.Update(tenant); err != nil {
 		return nil, fmt.Errorf("failed to update tenant: %w", err)
 	}

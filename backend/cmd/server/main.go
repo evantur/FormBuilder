@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/evantur/Product_0/backend/internal/auth"
-	"github.com/evantur/Product_0/backend/internal/config"
-	"github.com/evantur/Product_0/backend/internal/database"
-	"github.com/evantur/Product_0/backend/internal/handler"
-	"github.com/evantur/Product_0/backend/internal/repository"
-	"github.com/evantur/Product_0/backend/internal/service"
+	"product0/internal/auth"
+	"product0/internal/config"
+	"product0/internal/database"
+	"product0/internal/handler"
+	"product0/internal/repository"
+	"product0/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )

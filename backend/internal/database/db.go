@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/evantur/Product_0/backend/internal/domain"
+	"product0/internal/domain"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -48,9 +49,7 @@ func RunMigrations(db *gorm.DB) error {
 	}
 
 	// Create unique constraint for (tenant_id, email) in users table
-	if err := db.Exec(`
-		ALTER TABLE users ADD CONSTRAINT unique_tenant_email UNIQUE (tenant_id, email);
-	`).Error; err != nil {
+	if err := db.Exec("ALTER TABLE users ADD CONSTRAINT unique_tenant_email UNIQUE (tenant_id, email)").Error; err != nil {
 		// Ignore error if constraint already exists
 		log.Println("Note: unique_tenant_email constraint may already exist")
 	}
