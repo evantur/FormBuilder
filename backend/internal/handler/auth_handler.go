@@ -29,7 +29,7 @@ func NewAuthHandler(userService *service.UserService, tokenMgr *auth.TokenManage
 // LoginRequest represents a login request
 type LoginRequest struct {
 	TenantID string `json:"tenant_id"`
-	Email    string `json:"email" binding:"required,email"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
