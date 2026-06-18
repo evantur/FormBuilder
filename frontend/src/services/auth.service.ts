@@ -10,7 +10,11 @@ export interface AuthService {
 
 const authService: AuthService = {
   async login(email: string, password: string): Promise<AuthResponse> {
-    const request: LoginRequest = { email, password };
+    const request: LoginRequest = { 
+      email,
+      password,
+      tenant_id: '00000000-0000-0000-0000-000000000001', // Placeholder tenant ID for now
+     };
     const response = await apiClient.login(request);
     
     // Store token and user info
