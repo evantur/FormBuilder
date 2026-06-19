@@ -12,12 +12,12 @@ const FormsList: React.FC = () => {
   // TODO: fix this to use a proper refetch function from useForms() instead of local state, once we add that functionality to the hook. This is just a temporary workaround to allow immediate UI updates on delete without needing to refresh the page or wait for the next automatic refetch.
   // Local mirror of the forms list so we can reflect a delete immediately,
   // regardless of whether useForms() exposes a refetch function.
-  const [localForms, setLocalForms] = useState<Form[]>(forms);
+  const [localForms, setLocalForms] = useState<Form[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
-    setLocalForms(forms);
+    setLocalForms(forms || []);
   }, [forms]);
 
   const handleCardClick = (form: Form) => {
