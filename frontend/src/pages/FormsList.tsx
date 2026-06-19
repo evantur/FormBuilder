@@ -1,11 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForms, useAuth } from '../hooks';
+import { apiClient } from '../services/api';
+import { Form } from '../types/form';
 
 const FormsList: React.FC = () => {
   const { forms, isLoading, error } = useForms();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // TODO: fix this to use a proper refetch function from useForms() instead of local state, once we add that functionality to the hook. This is just a temporary workaround to allow immediate UI updates on delete without needing to refresh the page or wait for the next automatic refetch.
+  // Local mirror of the forms list so we can reflect a delete immediately,
+  // regardless of whether useForms() exposes a refetch function.
+  const [localForms, setLocalForms] = useState<Form[]>(forms);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLocalForms(forms);
+  }, [forms]);
+
+  const handleCardClick = (form: Form) => {
+    if (user?.role === 'respondent') {
+      navigate(`/forms/${form.id}/fill`);
+    } else {
+      navigate(`/forms/${form.id}/edit`);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent, form: Form) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(`Delete "${form.title}"? This cannot be undone.`);
+    if (!confirmed) return;
+
+    setDeletingId(form.id);
+    setDeleteError(null);
+    try {
+      await apiClient.deleteForm(form.id);
+      setLocalForms(prev => prev.filter(f => f.id !== form.id));
+    } catch (err: any) {
+      setDeleteError(err.response?.data?.error || 'Failed to delete form');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -50,8 +88,13 @@ const FormsList: React.FC = () => {
             <div className="text-sm font-medium text-red-800">{error}</div>
           </div>
         )}
+        {deleteError && (
+          <div className="rounded-md bg-red-50 p-4 mb-6">
+            <div className="text-sm font-medium text-red-800">{deleteError}</div>
+          </div>
+        )}
 
-        {forms.length === 0 ? (
+        {localForms.length === 0 ? (
           <div className="text-center">
             <p className="text-gray-600">No forms available yet.</p>
             {user?.role !== 'respondent' && (
@@ -65,17 +108,11 @@ const FormsList: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {forms.map((form) => (
+            {localForms.map((form) => (
               <div
                 key={form.id}
                 className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => {
-                  if (user?.role === 'respondent') {
-                    navigate(`/forms/${form.id}/fill`);
-                  } else {
-                    navigate(`/forms/${form.id}`);
-                  }
-                }}
+                onClick={() => handleCardClick(form)}
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between">
@@ -108,7 +145,7 @@ const FormsList: React.FC = () => {
                   </div>
 
                   {user?.role !== 'respondent' && (
-                    <div className="mt-4 space-x-2">
+                    <div className="mt-4 space-x-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -126,6 +163,13 @@ const FormsList: React.FC = () => {
                         className="px-3 py-1 text-sm font-medium text-green-600 hover:text-green-800"
                       >
                         Submissions
+                      </button>
+                      <button
+                        onClick={(e) => handleDelete(e, form)}
+                        disabled={deletingId === form.id}
+                        className="px-3 py-1 text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                      >
+                        {deletingId === form.id ? 'Deleting…' : 'Delete'}
                       </button>
                     </div>
                   )}
