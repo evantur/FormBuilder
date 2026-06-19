@@ -157,6 +157,25 @@ const FieldPreview: React.FC<{ field: FormField }> = ({ field }) => {
   }
 };
 
+// The backend's Go FormField struct stores options as []map[string]string
+// (e.g. {"label": "Option 1", "value": "option_1"}), while this UI works with
+// plain strings for simplicity. These helpers convert at the API boundary.
+const toWireFields = (fields: FormField[]): any[] =>
+  fields.map(f => ({
+    ...f,
+    options: f.options
+      ? f.options.map(opt => ({ label: opt, value: opt.toLowerCase().replace(/\s+/g, '_') }))
+      : undefined,
+  }));
+
+const fromWireFields = (rawFields: any[]): FormField[] =>
+  (rawFields ?? []).map(f => ({
+    ...f,
+    options: Array.isArray(f.options)
+      ? f.options.map((o: any) => (typeof o === 'string' ? o : o.label ?? o.value ?? ''))
+      : undefined,
+  }));
+
 const FormBuilder: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
@@ -177,7 +196,7 @@ const FormBuilder: React.FC = () => {
       .then(form => {
         setTitle(form.title);
         setDescription(form.description ?? '');
-        setFields(form.fields ?? []);
+        setFields(fromWireFields(form.fields as any));
       })
       .catch(() => setError('Failed to load form'))
       .finally(() => setLoading(false));
@@ -244,11 +263,12 @@ const FormBuilder: React.FC = () => {
     setSaving(true);
     setError(null);
     try {
+      const wireFields = toWireFields(fields);
       if (isEdit && id) {
-        await apiClient.updateForm(id, { title, description, fields, status });
+        await apiClient.updateForm(id, { title, description, fields: wireFields, status } as any);
       } else {
         // Create always lands as draft; publish immediately after if requested
-        const created = await apiClient.createForm({ title, description, fields });
+        const created = await apiClient.createForm({ title, description, fields: wireFields } as any);
         if (status === 'published') {
           await apiClient.updateForm(created.id, { status: 'published' });
         }
