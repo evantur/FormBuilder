@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
-import { FormField } from '../types/form';
+import { FieldType, FormField } from '../types/form';
 
-const FIELD_TYPES = [
+const FIELD_TYPES: { type: FieldType; label: string; icon: string }[] = [
   { type: 'text', label: 'Text', icon: '𝐓' },
   { type: 'email', label: 'Email', icon: '✉' },
   { type: 'number', label: 'Number', icon: '#' },
@@ -14,15 +14,16 @@ const FIELD_TYPES = [
   { type: 'date', label: 'Date', icon: '📅' },
 ];
 
-const makeField = (type: string, order: number): FormField => ({
+const fieldTypeLabel = (type: FieldType) =>
+  FIELD_TYPES.find(f => f.type === type)?.label ?? type;
+
+const makeField = (type: FieldType, order: number): FormField => ({
   id: `field_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
   type,
-  label: `${FIELD_TYPES.find(f => f.type === type)?.label ?? type} field`,
+  label: `${fieldTypeLabel(type)} field`,
   required: false,
   placeholder: '',
-  options: ['select', 'radio', 'checkbox'].includes(type)
-    ? [{ label: 'Option 1', value: 'option_1' }]
-    : [],
+  options: ['select', 'radio', 'checkbox'].includes(type) ? ['Option 1'] : undefined,
   order,
   validation: {},
 });
@@ -38,15 +39,12 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, onChange, onDelete }) 
 
   const addOption = () => {
     const n = (field.options?.length ?? 0) + 1;
-    onChange({
-      ...field,
-      options: [...(field.options ?? []), { label: `Option ${n}`, value: `option_${n}` }],
-    });
+    onChange({ ...field, options: [...(field.options ?? []), `Option ${n}`] });
   };
 
-  const updateOption = (i: number, label: string) => {
+  const updateOption = (i: number, value: string) => {
     const opts = [...(field.options ?? [])];
-    opts[i] = { label, value: label.toLowerCase().replace(/\s+/g, '_') };
+    opts[i] = value;
     onChange({ ...field, options: opts });
   };
 
@@ -71,7 +69,7 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, onChange, onDelete }) 
           <label className="block text-xs font-medium text-gray-500 mb-1">Placeholder</label>
           <input
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            value={field.placeholder}
+            value={field.placeholder ?? ''}
             onChange={e => onChange({ ...field, placeholder: e.target.value })}
           />
         </div>
@@ -94,7 +92,7 @@ const FieldEditor: React.FC<FieldEditorProps> = ({ field, onChange, onDelete }) 
               <div key={i} className="flex gap-1">
                 <input
                   className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  value={opt.label}
+                  value={opt}
                   onChange={e => updateOption(i, e.target.value)}
                 />
                 <button
@@ -129,7 +127,7 @@ const FieldPreview: React.FC<{ field: FormField }> = ({ field }) => {
       return (
         <select className={base} disabled>
           <option>{field.placeholder || 'Select an option…'}</option>
-          {field.options?.map((o, i) => <option key={i}>{o.label}</option>)}
+          {field.options?.map((o, i) => <option key={i}>{o}</option>)}
         </select>
       );
     case 'radio':
@@ -137,7 +135,7 @@ const FieldPreview: React.FC<{ field: FormField }> = ({ field }) => {
         <div className="space-y-1">
           {field.options?.map((o, i) => (
             <label key={i} className="flex items-center gap-2 text-sm text-gray-500">
-              <input type="radio" disabled /> {o.label}
+              <input type="radio" disabled /> {o}
             </label>
           ))}
         </div>
@@ -147,7 +145,7 @@ const FieldPreview: React.FC<{ field: FormField }> = ({ field }) => {
         <div className="space-y-1">
           {field.options?.map((o, i) => (
             <label key={i} className="flex items-center gap-2 text-sm text-gray-500">
-              <input type="checkbox" disabled /> {o.label}
+              <input type="checkbox" disabled /> {o}
             </label>
           ))}
         </div>
@@ -169,28 +167,34 @@ const FormBuilder: React.FC = () => {
   const [fields, setFields] = useState<FormField[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
 
-  // Drag state
-  const dragType = useRef<string | null>(null);     // dragging from palette
-  const dragFieldId = useRef<string | null>(null);  // reordering existing field
-  const dragOverId = useRef<string | null>(null);
+  // Load existing form when editing
+  useEffect(() => {
+    if (!id) return;
+    apiClient.getFormById(id)
+      .then(form => {
+        setTitle(form.title);
+        setDescription(form.description ?? '');
+        setFields(form.fields ?? []);
+      })
+      .catch(() => setError('Failed to load form'))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  // ─── Palette drag ───────────────────────────────────────
-  const onPaletteDragStart = (type: string) => {
+  // Drag state
+  const dragType = useRef<FieldType | null>(null);     // dragging from palette
+  const dragFieldId = useRef<string | null>(null);     // reordering existing field
+
+  const onPaletteDragStart = (type: FieldType) => {
     dragType.current = type;
     dragFieldId.current = null;
   };
 
-  // ─── Field reorder drag ──────────────────────────────────
   const onFieldDragStart = (fieldId: string) => {
     dragFieldId.current = fieldId;
     dragType.current = null;
-  };
-
-  const onDragOver = (e: React.DragEvent, overId: string) => {
-    e.preventDefault();
-    dragOverId.current = overId;
   };
 
   const onDropOnField = (e: React.DragEvent, targetId: string) => {
@@ -198,7 +202,6 @@ const FormBuilder: React.FC = () => {
     e.stopPropagation();
 
     if (dragType.current) {
-      // Drop from palette — insert before target
       const targetIdx = fields.findIndex(f => f.id === targetId);
       const newField = makeField(dragType.current, targetIdx);
       const next = [...fields];
@@ -206,7 +209,6 @@ const FormBuilder: React.FC = () => {
       setFields(next.map((f, i) => ({ ...f, order: i })));
       setSelectedFieldId(newField.id);
     } else if (dragFieldId.current && dragFieldId.current !== targetId) {
-      // Reorder
       const fromIdx = fields.findIndex(f => f.id === dragFieldId.current);
       const toIdx = fields.findIndex(f => f.id === targetId);
       const next = [...fields];
@@ -216,7 +218,6 @@ const FormBuilder: React.FC = () => {
     }
     dragType.current = null;
     dragFieldId.current = null;
-    dragOverId.current = null;
   };
 
   const onDropOnCanvas = (e: React.DragEvent) => {
@@ -243,7 +244,15 @@ const FormBuilder: React.FC = () => {
     setSaving(true);
     setError(null);
     try {
-      await apiClient.createForm({ title, description, fields, status });
+      if (isEdit && id) {
+        await apiClient.updateForm(id, { title, description, fields, status });
+      } else {
+        // Create always lands as draft; publish immediately after if requested
+        const created = await apiClient.createForm({ title, description, fields });
+        if (status === 'published') {
+          await apiClient.updateForm(created.id, { status: 'published' });
+        }
+      }
       navigate('/forms');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save form');
@@ -254,21 +263,22 @@ const FormBuilder: React.FC = () => {
 
   const selectedField = fields.find(f => f.id === selectedFieldId) ?? null;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500 text-sm">Loading form…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top bar */}
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/forms')}
-            className="text-sm text-gray-500 hover:text-gray-800"
-          >← Back</button>
-          <input
-            className="text-xl font-semibold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none px-1 py-0.5 min-w-[200px]"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="Form title"
-          />
+          <button onClick={() => navigate('/forms')} className="text-sm text-gray-500 hover:text-gray-800">← Back</button>
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+            {isEdit ? 'Editing' : 'New Form'}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {error && <span className="text-sm text-red-600">{error}</span>}
@@ -286,7 +296,6 @@ const FormBuilder: React.FC = () => {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Field palette */}
         <aside className="w-52 bg-white border-r border-gray-200 p-4 flex-shrink-0">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Field Types</p>
           <p className="text-xs text-gray-400 mb-3">Drag onto the canvas →</p>
@@ -305,14 +314,12 @@ const FormBuilder: React.FC = () => {
           </div>
         </aside>
 
-        {/* Center: Canvas */}
         <main
           className="flex-1 overflow-y-auto p-8"
           onDragOver={e => e.preventDefault()}
           onDrop={onDropOnCanvas}
         >
           <div className="max-w-2xl mx-auto space-y-4">
-            {/* Form meta */}
             <div className="bg-white rounded-lg border border-gray-200 p-6 mb-2">
               <input
                 className="w-full text-2xl font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none mb-2"
@@ -328,19 +335,16 @@ const FormBuilder: React.FC = () => {
               />
             </div>
 
-            {/* Fields */}
             {fields.map(field => (
               <div
                 key={field.id}
                 draggable
                 onDragStart={() => onFieldDragStart(field.id)}
-                onDragOver={e => onDragOver(e, field.id)}
+                onDragOver={e => e.preventDefault()}
                 onDrop={e => onDropOnField(e, field.id)}
                 onClick={() => setSelectedFieldId(field.id)}
                 className={`bg-white rounded-lg border-2 p-5 cursor-pointer transition-colors select-none ${
-                  selectedFieldId === field.id
-                    ? 'border-blue-500 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300'
+                  selectedFieldId === field.id ? 'border-blue-500 shadow-md' : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
@@ -354,7 +358,6 @@ const FormBuilder: React.FC = () => {
               </div>
             ))}
 
-            {/* Empty drop zone */}
             {fields.length === 0 && (
               <div
                 onDragOver={e => e.preventDefault()}
@@ -378,18 +381,11 @@ const FormBuilder: React.FC = () => {
           </div>
         </main>
 
-        {/* Right: Field editor */}
         <aside className="w-64 bg-white border-l border-gray-200 p-4 flex-shrink-0 overflow-y-auto">
           {selectedField ? (
             <>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
-                Edit Field
-              </p>
-              <FieldEditor
-                field={selectedField}
-                onChange={updateField}
-                onDelete={() => deleteField(selectedField.id)}
-              />
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Edit Field</p>
+              <FieldEditor field={selectedField} onChange={updateField} onDelete={() => deleteField(selectedField.id)} />
             </>
           ) : (
             <div className="text-sm text-gray-400 mt-8 text-center">
