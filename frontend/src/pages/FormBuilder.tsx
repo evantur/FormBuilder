@@ -264,15 +264,24 @@ const FormBuilder: React.FC = () => {
     setError(null);
     try {
       const wireFields = toWireFields(fields);
+
       if (isEdit && id) {
         await apiClient.updateForm(id, { title, description, fields: wireFields, status } as any);
-      } else {
-        // Create always lands as draft; publish immediately after if requested
-        const created = await apiClient.createForm({ title, description, fields: wireFields } as any);
-        if (status === 'published') {
-          await apiClient.updateForm(created.id, { status: 'published' });
-        }
+        navigate('/forms');
+        return;
       }
+
+      // Creating a new form — it always lands as draft first
+      const created = await apiClient.createForm({ title, description, fields: wireFields } as any);
+
+      if (status === 'published') {
+        // Switch the page into edit mode for this form *before* attempting the
+        // publish step. If this PUT fails, the form already exists server-side —
+        // this ensures a retry updates that same form instead of creating a duplicate.
+        navigate(`/forms/${created.id}/edit`, { replace: true });
+        await apiClient.updateForm(created.id, { title, description, fields: wireFields, status: 'published' } as any);
+      }
+
       navigate('/forms');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save form');
