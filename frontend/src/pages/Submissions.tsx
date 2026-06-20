@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../services/api';
 import { Form } from '../types/form';
 
 const Submissions: React.FC = () => {
   const navigate = useNavigate();
+  const { id: formIdParam } = useParams<{ id?: string }>();
+
   const [forms, setForms] = useState<Form[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(false);
-
-  useEffect(() => {
-    apiClient.getForms()
-      .then(setForms)
-      .catch(() => setError('Failed to load forms'))
-      .finally(() => setIsLoading(false));
-  }, []);
 
   const loadSubmissions = async (formId: string) => {
     setSelectedForm(formId);
@@ -31,6 +26,20 @@ const Submissions: React.FC = () => {
       setLoadingSubs(false);
     }
   };
+
+  useEffect(() => {
+    apiClient.getForms()
+      .then(data => {
+        setForms(data);
+        // If we arrived via /forms/:id/submissions, auto-select that form
+        if (formIdParam) {
+          loadSubmissions(formIdParam);
+        }
+      })
+      .catch(() => setError('Failed to load forms'))
+      .finally(() => setIsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formIdParam]);
 
   const selectedFormObj = forms.find(f => f.id === selectedForm);
 

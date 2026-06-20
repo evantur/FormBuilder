@@ -23,6 +23,7 @@ function App() {
           <Route path="/forms/:id/edit" element={<ProtectedRoute><FormBuilder /></ProtectedRoute>} />
           <Route path="/forms/:id/fill" element={<ProtectedRoute><FormFill /></ProtectedRoute>} />
           <Route path="/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
+          <Route path="/forms/:id/submissions" element={<ProtectedRoute><Submissions /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
