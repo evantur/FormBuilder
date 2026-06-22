@@ -64,7 +64,7 @@ const FormsList: React.FC = () => {
         {error && <div className="error-banner"><div className="error-banner-text">{error}</div></div>}
         {deleteError && <div className="error-banner"><div className="error-banner-text">{deleteError}</div></div>}
 
-        {localForms.length === 0 ? (
+        {localForms.length === 0 ? ( // If no forms, show empty state
           <div className="forms-empty">
             <p className="forms-empty-text">No forms available yet.</p>
             {user?.role !== 'respondent' && (
@@ -74,6 +74,7 @@ const FormsList: React.FC = () => {
             )}
           </div>
         ) : (
+          // Display forms in a grid
           <div className="forms-grid">
             {localForms.map(form => (
               <div key={form.id} className="form-card" onClick={() => handleCardClick(form)}>
