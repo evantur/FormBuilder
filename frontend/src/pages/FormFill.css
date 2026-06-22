@@ -1,0 +1,27 @@
+@import '../styles/shared.css';
+
+.formfill-error-text { @apply text-red-600; }
+
+/* ─── Success screen ───────────────────────────────────── */
+.formfill-success-screen { @apply min-h-screen bg-gray-50 flex items-center justify-center; }
+.formfill-success-card   { @apply bg-white rounded-lg shadow p-8 max-w-md text-center; }
+.formfill-success-icon   { @apply mb-4 text-green-600; }
+.formfill-success-svg    { @apply mx-auto h-12 w-12; }
+.formfill-success-heading { @apply text-2xl font-bold text-gray-900 mb-2; }
+.formfill-success-text   { @apply text-gray-600 mb-6; }
+
+/* ─── Header ───────────────────────────────────────────── */
+.formfill-header-inner {
+  @apply max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8;
+}
+
+.formfill-back-link {
+  @apply text-blue-600 hover:text-blue-800 text-sm mb-4;
+}
+
+/* ─── Main content ─────────────────────────────────────── */
+.formfill-main {
+  @apply max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8;
+}
+
+.formfill-card { @apply bg-white rounded-lg shadow p-8; }

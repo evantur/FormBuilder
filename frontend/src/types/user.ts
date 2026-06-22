@@ -27,4 +27,5 @@ export interface AuthResponse {
 export interface LoginRequest {
   email: string;
   password: string;
+  tenant_id: string;
 }

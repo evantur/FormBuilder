@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Form } from '../types/form';
 import formService from '../services/form.service';
 
+// Custom hook to manage forms data
 export const useForms = () => {
   const [forms, setForms] = useState<Form[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +25,7 @@ export const useForms = () => {
     fetchForms();
   }, []);
 
-  return { forms, isLoading, error, refetch: fetchForms };
+  return { forms, isLoading, error, refetch: fetchForms }; // Expose refetch function so components can trigger manual refresh after actions like delete
 };
 
 export const useForm = (id: string) => {

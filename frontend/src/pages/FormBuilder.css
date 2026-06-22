@@ -1,0 +1,106 @@
+@import '../styles/shared.css';
+
+/* ─── Overall layout ───────────────────────────────────── */
+.builder-page   { @apply min-h-screen bg-gray-50 flex flex-col; }
+.builder-layout { @apply flex flex-1 overflow-hidden; }
+
+/* ─── Top bar ──────────────────────────────────────────── */
+.builder-header       { @apply bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between; }
+.builder-header-left  { @apply flex items-center gap-4; }
+.builder-header-right { @apply flex items-center gap-2; }
+.builder-back-btn     { @apply text-sm text-gray-500 hover:text-gray-800; }
+.builder-mode-label   { @apply text-xs font-medium text-gray-400 uppercase tracking-wider; }
+.builder-error-text   { @apply text-sm text-red-600; }
+
+.builder-btn-draft {
+  @apply px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300
+         rounded-md hover:bg-gray-50 disabled:opacity-50;
+}
+
+.builder-btn-publish {
+  @apply px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md
+         hover:bg-blue-700 disabled:opacity-50;
+}
+
+/* ─── Left palette ─────────────────────────────────────── */
+.palette-panel    { @apply w-52 bg-white border-r border-gray-200 p-4 flex-shrink-0; }
+.palette-label    { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3; }
+.palette-hint     { @apply text-xs text-gray-400 mb-3; }
+.palette-list     { @apply space-y-1.5; }
+
+.palette-item {
+  @apply flex items-center gap-2 px-3 py-2 rounded-md border border-gray-200
+         bg-gray-50 hover:bg-blue-50 hover:border-blue-200
+         cursor-grab active:cursor-grabbing text-sm text-gray-700 select-none;
+}
+
+.palette-icon { @apply text-base w-5 text-center; }
+
+/* ─── Canvas ───────────────────────────────────────────── */
+.builder-canvas       { @apply flex-1 overflow-y-auto p-8; }
+.builder-canvas-inner { @apply max-w-2xl mx-auto space-y-4; }
+
+.canvas-meta-card  { @apply bg-white rounded-lg border border-gray-200 p-6 mb-2; }
+
+.canvas-title-input {
+  @apply w-full text-2xl font-bold text-gray-900 bg-transparent border-b
+         border-transparent hover:border-gray-300 focus:border-blue-500
+         focus:outline-none mb-2;
+}
+
+.canvas-desc-input {
+  @apply w-full text-sm text-gray-500 bg-transparent border-b border-transparent
+         hover:border-gray-300 focus:border-blue-500 focus:outline-none;
+}
+
+.field-card {
+  @apply bg-white rounded-lg border-2 p-5 cursor-pointer transition-colors
+         select-none border-gray-200 hover:border-gray-300;
+}
+
+.field-card-selected {
+  @apply bg-white rounded-lg border-2 p-5 cursor-pointer transition-colors
+         select-none border-blue-500 shadow-md;
+}
+
+.field-card-header { @apply flex items-start justify-between mb-2; }
+.field-card-label  { @apply text-sm font-medium text-gray-800; }
+.field-required    { @apply text-red-500 ml-1; }
+.field-drag-handle { @apply text-xs text-gray-400 ml-2 flex-shrink-0 cursor-grab; }
+
+.drop-zone-empty {
+  @apply border-2 border-dashed border-gray-300 rounded-lg p-16
+         text-center text-gray-400;
+}
+
+.drop-zone-end {
+  @apply border-2 border-dashed border-gray-200 rounded-lg p-6
+         text-center text-gray-300 text-sm;
+}
+
+/* ─── Right editor panel ───────────────────────────────── */
+.editor-panel          { @apply w-64 bg-white border-l border-gray-200 p-4 flex-shrink-0 overflow-y-auto; }
+.editor-label          { @apply text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4; }
+.editor-empty-hint     { @apply text-sm text-gray-400 mt-8 text-center; }
+
+/* ─── Field editor internals ───────────────────────────── */
+.field-editor          { @apply space-y-3; }
+.field-editor-label    { @apply block text-xs font-medium text-gray-500 mb-1; }
+.field-editor-input    { @apply w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500; }
+.field-editor-row      { @apply flex items-center gap-2; }
+.field-editor-checkbox-label { @apply text-sm text-gray-700; }
+
+.options-list          { @apply space-y-1.5; }
+.option-row            { @apply flex gap-1; }
+.option-input          { @apply flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500; }
+.option-remove-btn     { @apply text-red-400 hover:text-red-600 px-1 text-lg leading-none; }
+.option-add-btn        { @apply text-xs text-blue-600 hover:text-blue-800 font-medium mt-1; }
+.field-remove-btn      { @apply w-full mt-2 px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 rounded hover:bg-red-50; }
+
+/* ─── Field preview (disabled inputs) ─────────────────── */
+.preview-input         { @apply w-full border border-gray-200 rounded px-3 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed; }
+.preview-option-label  { @apply flex items-center gap-2 text-sm text-gray-500; }
+
+/* ─── Loading ──────────────────────────────────────────── */
+.builder-loading       { @apply min-h-screen flex items-center justify-center bg-gray-50; }
+.builder-loading-text  { @apply text-gray-500 text-sm; }

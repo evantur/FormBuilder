@@ -28,8 +28,8 @@ func NewAuthHandler(userService *service.UserService, tokenMgr *auth.TokenManage
 
 // LoginRequest represents a login request
 type LoginRequest struct {
-	TenantID string `json:"tenant_id" binding:"required"`
-	Email    string `json:"email" binding:"required,email"`
+	TenantID string `json:"tenant_id"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
@@ -50,8 +50,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	tenantIDStr := req.TenantID
+	if tenantIDStr == "" {
+		tenantIDStr = "00000000-0000-0000-0000-000000000001" // Default tenant ID for now
+	}
+
 	// Parse tenant ID
-	tenantID, err := uuid.Parse(req.TenantID)
+	tenantID, err := uuid.Parse(tenantIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid tenant_id"})
 		return

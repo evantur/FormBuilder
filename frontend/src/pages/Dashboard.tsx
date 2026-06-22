@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAuth } from '../hooks';
 import { useNavigate } from 'react-router-dom';
+import Logo from '../components/Common/Logo';
+import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const { user, tenant, logout } = useAuth();
@@ -12,58 +14,41 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Form Builder</h1>
-            <p className="text-sm text-gray-600 mt-1">{tenant?.name}</p>
+    <div className="page">
+      <header className="page-header">
+        <div className="page-header-inner">
+          <div className="dashboard-header-brand">
+            <Logo size={40} />
+            <div>
+              <h1 className="page-header-title">Form Builder</h1>
+              <p className="page-header-subtitle">{tenant?.name}</p>
+            </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Logout
-          </button>
+          <button onClick={handleLogout} className="btn-secondary">Logout</button>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Welcome Card */}
-          <div className="bg-white rounded-lg shadow p-6 md:col-span-3">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Welcome, {user?.email}!
-            </h2>
-            <p className="text-gray-600">
+      <main className="page-main">
+        <div className="dashboard-grid">
+          <div className="dashboard-welcome-card">
+            <h2 className="dashboard-welcome-heading">Welcome, {user?.email}!</h2>
+            <p className="dashboard-welcome-text">
               You are logged in as <strong>{user?.role}</strong> in {tenant?.name}
             </p>
           </div>
 
-          {/* Quick Links */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
-            <nav className="space-y-3">
-              <button
-                onClick={() => navigate('/forms')}
-                className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50 rounded-md"
-              >
+          <div className="card">
+            <h3 className="dashboard-card-heading">Quick Actions</h3>
+            <nav className="dashboard-nav">
+              <button onClick={() => navigate('/forms')} className="dashboard-nav-btn">
                 View Forms →
               </button>
               {user?.role !== 'respondent' && (
                 <>
-                  <button
-                    onClick={() => navigate('/forms/new')}
-                    className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50 rounded-md"
-                  >
+                  <button onClick={() => navigate('/forms/new')} className="dashboard-nav-btn">
                     Create Form →
                   </button>
-                  <button
-                    onClick={() => navigate('/submissions')}
-                    className="w-full text-left px-4 py-2 text-sm font-medium text-blue-600 hover:bg-gray-50 rounded-md"
-                  >
+                  <button onClick={() => navigate('/submissions')} className="dashboard-nav-btn">
                     View Submissions →
                   </button>
                 </>
@@ -71,31 +56,30 @@ const Dashboard: React.FC = () => {
             </nav>
           </div>
 
-          {/* Info Cards */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Account Info</h3>
-            <dl className="space-y-3">
+          <div className="card">
+            <h3 className="dashboard-card-heading">Account Info</h3>
+            <dl className="dashboard-dl">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Email</dt>
-                <dd className="mt-1 text-sm text-gray-900">{user?.email}</dd>
+                <dt className="dashboard-dt">Email</dt>
+                <dd className="dashboard-dd">{user?.email}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Role</dt>
-                <dd className="mt-1 text-sm text-gray-900 capitalize">{user?.role}</dd>
+                <dt className="dashboard-dt">Role</dt>
+                <dd className="dashboard-dd capitalize">{user?.role}</dd>
               </div>
             </dl>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Organization</h3>
-            <dl className="space-y-3">
+          <div className="card">
+            <h3 className="dashboard-card-heading">Organization</h3>
+            <dl className="dashboard-dl">
               <div>
-                <dt className="text-sm font-medium text-gray-500">Tenant</dt>
-                <dd className="mt-1 text-sm text-gray-900">{tenant?.name}</dd>
+                <dt className="dashboard-dt">Tenant</dt>
+                <dd className="dashboard-dd">{tenant?.name}</dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">Domain</dt>
-                <dd className="mt-1 text-sm text-gray-900">{tenant?.domain || 'N/A'}</dd>
+                <dt className="dashboard-dt">Domain</dt>
+                <dd className="dashboard-dd">{tenant?.domain || 'N/A'}</dd>
               </div>
             </dl>
           </div>
