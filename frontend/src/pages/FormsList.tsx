@@ -10,7 +10,7 @@ const FormsList: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [localForms, setLocalForms] = useState<Form[]>(forms);
+  const [localForms, setLocalForms] = useState<Form[]>([]); // Have '[]' instead of 'forms' to handle empty forms case and avoid flicker on initial load
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -64,7 +64,7 @@ const FormsList: React.FC = () => {
         {error && <div className="error-banner"><div className="error-banner-text">{error}</div></div>}
         {deleteError && <div className="error-banner"><div className="error-banner-text">{deleteError}</div></div>}
 
-        {localForms.length === 0 ? ( // If no forms, show empty state
+        {(localForms === null || localForms.length === 0) ? ( // If no forms, show empty state
           <div className="forms-empty">
             <p className="forms-empty-text">No forms available yet.</p>
             {user?.role !== 'respondent' && (
