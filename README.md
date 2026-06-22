@@ -26,6 +26,7 @@ docker-compose up
 This will start:
 - PostgreSQL on port 5432
 - Go backend on port 8080
+- React frontend on port 3000
 
 ### Manual Setup
 
