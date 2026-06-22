@@ -64,7 +64,7 @@ const FormsList: React.FC = () => {
         {error && <div className="error-banner"><div className="error-banner-text">{error}</div></div>}
         {deleteError && <div className="error-banner"><div className="error-banner-text">{deleteError}</div></div>}
 
-        {(localForms === null || localForms.length === 0) ? ( // If no forms, show empty state
+        {(localForms == null || localForms.length === 0) ? ( // If no forms, show empty state
           <div className="forms-empty">
             <p className="forms-empty-text">No forms available yet.</p>
             {user?.role !== 'respondent' && (
@@ -109,6 +109,15 @@ const FormsList: React.FC = () => {
                         disabled={deletingId === form.id}
                         className="btn-link-red"
                       >{deletingId === form.id ? 'Deleting…' : 'Delete'}</button>
+                    </div>
+                  )}
+                  {/* Respondents can only fill forms, so we show the "Fill Form" button only for them. */}
+                  {user?.role === 'respondent' && (
+                    <div className="form-card-actions">
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/fill`); }}
+                        className="btn-link-blue"
+                      >Fill Form</button>
                     </div>
                   )}
                 </div>
