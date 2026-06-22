@@ -1,0 +1,46 @@
+@import '../styles/shared.css';
+
+.dashboard-header-brand {
+  @apply flex items-center gap-3;
+}
+
+.dashboard-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-6;
+}
+
+.dashboard-welcome-card {
+  @apply card md:col-span-3;
+}
+
+.dashboard-welcome-heading {
+  @apply text-2xl font-bold text-gray-900 mb-2;
+}
+
+.dashboard-welcome-text {
+  @apply text-gray-600;
+}
+
+.dashboard-card-heading {
+  @apply text-lg font-medium text-gray-900 mb-4;
+}
+
+.dashboard-nav {
+  @apply space-y-3;
+}
+
+.dashboard-nav-btn {
+  @apply w-full text-left px-4 py-2 text-sm font-medium text-blue-600
+         hover:bg-gray-50 rounded-md;
+}
+
+.dashboard-dl {
+  @apply space-y-3;
+}
+
+.dashboard-dt {
+  @apply text-sm font-medium text-gray-500;
+}
+
+.dashboard-dd {
+  @apply mt-1 text-sm text-gray-900;
+}
