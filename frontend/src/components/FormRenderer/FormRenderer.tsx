@@ -9,10 +9,17 @@ interface FormRendererProps {
   isSubmitting?: boolean;
 }
 
-const FormRenderer: React.FC<FormRendererProps> = ({ 
-  form, 
-  onSubmitSuccess, 
-  isSubmitting = false 
+// Options coming from the backend are {label, value} objects; options typed
+// locally in form.ts are plain strings. This normalises both into {label, value}.
+const normaliseOption = (opt: any): { label: string; value: string } => {
+  if (typeof opt === 'string') return { label: opt, value: opt };
+  return { label: opt.label ?? opt.value ?? '', value: opt.value ?? opt.label ?? '' };
+};
+
+const FormRenderer: React.FC<FormRendererProps> = ({
+  form,
+  onSubmitSuccess,
+  isSubmitting = false,
 }) => {
   const { register, handleSubmit, formState: { errors } } = useReactHookForm<Record<string, any>>();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -21,7 +28,6 @@ const FormRenderer: React.FC<FormRendererProps> = ({
   const onSubmit: SubmitHandler<Record<string, any>> = async (data) => {
     setIsLoading(true);
     setSubmitError(null);
-
     try {
       await apiClient.submitForm(form.id, { data });
       setIsLoading(false);
@@ -36,25 +42,28 @@ const FormRenderer: React.FC<FormRendererProps> = ({
     const fieldProps = {
       ...register(field.id, {
         required: field.required ? `${field.label} is required` : false,
-        pattern: field.validation?.pattern 
+        pattern: field.validation?.pattern
           ? { value: new RegExp(field.validation.pattern), message: `${field.label} is invalid` }
           : undefined,
-        minLength: field.validation?.minLength 
+        minLength: field.validation?.minLength
           ? { value: field.validation.minLength, message: `Minimum length is ${field.validation.minLength}` }
           : undefined,
-        maxLength: field.validation?.maxLength 
+        maxLength: field.validation?.maxLength
           ? { value: field.validation.maxLength, message: `Maximum length is ${field.validation.maxLength}` }
           : undefined,
-        min: field.validation?.min 
+        min: field.validation?.min
           ? { value: field.validation.min, message: `Minimum value is ${field.validation.min}` }
           : undefined,
-        max: field.validation?.max 
+        max: field.validation?.max
           ? { value: field.validation.max, message: `Maximum value is ${field.validation.max}` }
           : undefined,
       }),
     };
 
     const errorMessage = errors[field.id]?.message as string | undefined;
+    const inputClass = "mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500";
+    const labelClass = "block text-sm font-medium text-gray-700";
+    const options = (field.options ?? []).map(normaliseOption);
 
     switch (field.type) {
       case 'text':
@@ -62,15 +71,14 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'number':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
             <input
               {...fieldProps}
               type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'}
               placeholder={field.placeholder}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              className={inputClass}
             />
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
           </div>
@@ -79,16 +87,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'textarea':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
-            <textarea
-              {...fieldProps}
-              placeholder={field.placeholder}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-              rows={4}
-            />
+            <textarea {...fieldProps} placeholder={field.placeholder} className={inputClass} rows={4} />
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
           </div>
         );
@@ -97,19 +99,28 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'grade_level':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
-            <select
-              {...fieldProps}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            >
+            <select {...fieldProps} className={inputClass}>
               <option value="">Select {field.label}</option>
-              {field.options?.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+              {options.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
+          </div>
+        );
+
+      case 'multiselect':
+        return (
+          <div key={field.id} className="mb-4">
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
+            </label>
+            <select {...fieldProps} multiple className={inputClass}>
+              {options.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
@@ -119,20 +130,14 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'radio':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
             <div className="mt-2 space-y-2">
-              {field.options?.map((option) => (
-                <div key={option} className="flex items-center">
-                  <input
-                    {...fieldProps}
-                    type="radio"
-                    value={option}
-                    className="h-4 w-4 text-blue-600"
-                  />
-                  <label className="ml-3 text-sm text-gray-700">{option}</label>
+              {options.map(opt => (
+                <div key={opt.value} className="flex items-center">
+                  <input {...fieldProps} type="radio" value={opt.value} className="h-4 w-4 text-blue-600" />
+                  <label className="ml-3 text-sm text-gray-700">{opt.label}</label>
                 </div>
               ))}
             </div>
@@ -143,20 +148,14 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'checkbox':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
             <div className="mt-2 space-y-2">
-              {field.options?.map((option) => (
-                <div key={option} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    value={option}
-                    className="h-4 w-4 text-blue-600 rounded"
-                    {...fieldProps}
-                  />
-                  <label className="ml-3 text-sm text-gray-700">{option}</label>
+              {options.map(opt => (
+                <div key={opt.value} className="flex items-center">
+                  <input type="checkbox" value={opt.value} className="h-4 w-4 text-blue-600 rounded" {...fieldProps} />
+                  <label className="ml-3 text-sm text-gray-700">{opt.label}</label>
                 </div>
               ))}
             </div>
@@ -167,15 +166,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'date':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
-            <input
-              {...fieldProps}
-              type="date"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <input {...fieldProps} type="date" className={inputClass} />
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
           </div>
         );
@@ -183,16 +177,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'student_id':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
-            <input
-              {...fieldProps}
-              type="text"
-              placeholder="Alphanumeric student ID"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <input {...fieldProps} type="text" placeholder="Alphanumeric student ID" className={inputClass} />
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
           </div>
         );
@@ -200,37 +188,10 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       case 'file':
         return (
           <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
+            <label className={labelClass}>
+              {field.label}{field.required && <span className="text-red-500">*</span>}
             </label>
-            <input
-              {...fieldProps}
-              type="file"
-              className="mt-1 block w-full"
-            />
-            {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
-          </div>
-        );
-
-      case 'multiselect':
-        return (
-          <div key={field.id} className="mb-4">
-            <label className="block text-sm font-medium text-gray-700">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <select
-              {...fieldProps}
-              multiple
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            >
-              {field.options?.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+            <input {...fieldProps} type="file" className="mt-1 block w-full" />
             {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
           </div>
         );
@@ -244,9 +205,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">{form.title}</h1>
-        {form.description && (
-          <p className="mt-2 text-gray-600">{form.description}</p>
-        )}
+        {form.description && <p className="mt-2 text-gray-600">{form.description}</p>}
       </div>
 
       {submitError && (
@@ -258,7 +217,7 @@ const FormRenderer: React.FC<FormRendererProps> = ({
       <div className="bg-white rounded-lg shadow p-6">
         {form.fields
           .sort((a, b) => a.order - b.order)
-          .map((field) => renderField(field))}
+          .map(field => renderField(field))}
 
         <button
           type="submit"
