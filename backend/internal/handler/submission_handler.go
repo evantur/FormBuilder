@@ -167,6 +167,47 @@ func (h *SubmissionHandler) GetSubmission(c *gin.Context) {
 	})
 }
 
+// GetMySubmission retrieves the current authenticated user's submission for a form
+func (h *SubmissionHandler) GetMySubmission(c *gin.Context) {
+	tenantID, err := auth.TenantContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	email, err := auth.EmailContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found in context"})
+		return
+	}
+
+	formID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid form_id"})
+		return
+	}
+
+	submission, err := h.submissionService.GetSubmissionByFormAndUser(tenantID, formID, email)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no submission found"})
+		return
+	}
+
+	var data map[string]interface{}
+	if err := json.Unmarshal(submission.Data, &data); err != nil {
+		data = make(map[string]interface{})
+	}
+
+	c.JSON(http.StatusOK, SubmissionResponse{
+		ID:          submission.ID.String(),
+		FormID:      submission.FormID.String(),
+		TenantID:    submission.TenantID.String(),
+		Data:        data,
+		SubmittedAt: submission.SubmittedAt.String(),
+		SubmittedBy: submission.SubmittedBy,
+	})
+}
+
 // DeleteSubmission deletes a submission
 func (h *SubmissionHandler) DeleteSubmission(c *gin.Context) {
 	tenantID, err := auth.TenantContext(c)
