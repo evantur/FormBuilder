@@ -61,6 +61,13 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
+	// Check for existing submission with matching formID and submittedBy
+	existingSubmission, err := h.submissionService.GetSubmissionByFormAndUser(tenantID, formID, submittedBy)
+	if err == nil && existingSubmission != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "submission already exists for this form and user"})
+		return
+	}
+
 	// Create submission
 	submission, err := h.submissionService.CreateSubmission(tenantID, formID, req.Data, submittedBy)
 	if err != nil {

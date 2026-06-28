@@ -61,6 +61,15 @@ func (s *SubmissionService) GetSubmission(tenantID, submissionID uuid.UUID) (*do
 	return submission, nil
 }
 
+// GetSubmissionByFormAndUser retrieves a submission by form ID and user
+func (s *SubmissionService) GetSubmissionByFormAndUser(tenantID, formID uuid.UUID, submittedBy string) (*domain.Submission, error) {
+	submission, err := s.repo.GetByFormAndUser(tenantID, formID, submittedBy)
+	if err != nil {
+		return nil, fmt.Errorf("submission not found: %w", err)
+	}
+	return submission, nil
+}
+
 // ListSubmissionsByForm lists all submissions for a form
 func (s *SubmissionService) ListSubmissionsByForm(tenantID, formID uuid.UUID) ([]domain.Submission, error) {
 	submissions, err := s.repo.ListByForm(tenantID, formID)

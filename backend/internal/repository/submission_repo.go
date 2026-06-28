@@ -22,6 +22,15 @@ func (r *SubmissionRepository) Create(submission *domain.Submission) error {
 	return r.db.Create(submission).Error
 }
 
+// GetByFormAndUser retrieves a submission by form ID and user
+func (r *SubmissionRepository) GetByFormAndUser(tenantID, formID uuid.UUID, submittedBy string) (*domain.Submission, error) {
+	var submission domain.Submission
+	if err := r.db.Where("tenant_id = ? AND form_id = ? AND submitted_by = ?", tenantID, formID, submittedBy).First(&submission).Error; err != nil {
+		return nil, err
+	}
+	return &submission, nil
+}
+
 // GetByID retrieves a submission by ID with tenant scoping
 func (r *SubmissionRepository) GetByID(tenantID, submissionID uuid.UUID) (*domain.Submission, error) {
 	var submission domain.Submission
