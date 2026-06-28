@@ -44,9 +44,9 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	userEmail, err := auth.RoleContext(c) // Get user context for email
+	submittedBy, err := auth.EmailContext(c) // Get user context for email
 	if err != nil {
-		userEmail = "anonymous"
+		submittedBy = "anonymous"
 	}
 
 	formID, err := uuid.Parse(c.Param("id"))
@@ -61,7 +61,8 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	submission, err := h.submissionService.CreateSubmission(tenantID, formID, req.Data, userEmail)
+	// Create submission
+	submission, err := h.submissionService.CreateSubmission(tenantID, formID, req.Data, submittedBy)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
