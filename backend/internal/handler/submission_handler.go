@@ -44,9 +44,9 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	userEmail, err := auth.RoleContext(c) // Get user context for email
+	submittedBy, err := auth.EmailContext(c) // Get user context for email
 	if err != nil {
-		userEmail = "anonymous"
+		submittedBy = "anonymous"
 	}
 
 	formID, err := uuid.Parse(c.Param("id"))
@@ -61,7 +61,15 @@ func (h *SubmissionHandler) CreateSubmission(c *gin.Context) {
 		return
 	}
 
-	submission, err := h.submissionService.CreateSubmission(tenantID, formID, req.Data, userEmail)
+	// Check for existing submission with matching formID and submittedBy
+	existingSubmission, err := h.submissionService.GetSubmissionByFormAndUser(tenantID, formID, submittedBy)
+	if err == nil && existingSubmission != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "submission already exists for this form and user"})
+		return
+	}
+
+	// Create submission
+	submission, err := h.submissionService.CreateSubmission(tenantID, formID, req.Data, submittedBy)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -144,6 +152,47 @@ func (h *SubmissionHandler) GetSubmission(c *gin.Context) {
 	}
 
 	// Unmarshal submission data
+	var data map[string]interface{}
+	if err := json.Unmarshal(submission.Data, &data); err != nil {
+		data = make(map[string]interface{})
+	}
+
+	c.JSON(http.StatusOK, SubmissionResponse{
+		ID:          submission.ID.String(),
+		FormID:      submission.FormID.String(),
+		TenantID:    submission.TenantID.String(),
+		Data:        data,
+		SubmittedAt: submission.SubmittedAt.String(),
+		SubmittedBy: submission.SubmittedBy,
+	})
+}
+
+// GetMySubmission retrieves the current authenticated user's submission for a form
+func (h *SubmissionHandler) GetMySubmission(c *gin.Context) {
+	tenantID, err := auth.TenantContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	email, err := auth.EmailContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found in context"})
+		return
+	}
+
+	formID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid form_id"})
+		return
+	}
+
+	submission, err := h.submissionService.GetSubmissionByFormAndUser(tenantID, formID, email)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no submission found"})
+		return
+	}
+
 	var data map[string]interface{}
 	if err := json.Unmarshal(submission.Data, &data); err != nil {
 		data = make(map[string]interface{})

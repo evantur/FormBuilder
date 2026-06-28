@@ -2,26 +2,41 @@
 
 .formfill-error-text { @apply text-red-600; }
 
-/* ─── Success screen ───────────────────────────────────── */
-.formfill-success-screen { @apply min-h-screen bg-gray-50 flex items-center justify-center; }
-.formfill-success-card   { @apply bg-white rounded-lg shadow p-8 max-w-md text-center; }
-.formfill-success-icon   { @apply mb-4 text-green-600; }
-.formfill-success-svg    { @apply mx-auto h-12 w-12; }
+.formfill-success-screen  { @apply min-h-screen bg-gray-50 flex items-center justify-center; }
+.formfill-success-card    { @apply bg-white rounded-lg shadow p-8 max-w-md text-center; }
+.formfill-success-icon    { @apply mb-4 text-green-600; }
+.formfill-success-svg     { @apply mx-auto h-12 w-12; }
 .formfill-success-heading { @apply text-2xl font-bold text-gray-900 mb-2; }
-.formfill-success-text   { @apply text-gray-600 mb-6; }
+.formfill-success-text    { @apply text-gray-600 mb-6; }
 
-/* ─── Header ───────────────────────────────────────────── */
-.formfill-header-inner {
-  @apply max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8;
-}
+.formfill-header-inner { @apply max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8; }
+.formfill-back-link    { @apply text-blue-600 hover:text-blue-800 text-sm mb-4; }
 
-.formfill-back-link {
-  @apply text-blue-600 hover:text-blue-800 text-sm mb-4;
-}
-
-/* ─── Main content ─────────────────────────────────────── */
-.formfill-main {
-  @apply max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8;
-}
-
+.formfill-main { @apply max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8; }
 .formfill-card { @apply bg-white rounded-lg shadow p-8; }
+
+/* ─── Already submitted view ───────────────────────────── */
+.formfill-already-card {
+  @apply bg-white rounded-lg shadow p-8 max-w-lg w-full text-center;
+}
+
+.formfill-already-icon  { @apply mb-4 text-green-600; }
+
+.formfill-already-date  { @apply text-sm text-gray-400 mb-6; }
+
+.formfill-already-answers {
+  @apply text-left bg-gray-50 rounded-lg p-5 mb-6 space-y-3;
+}
+
+.formfill-already-answers-title {
+  @apply text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3;
+}
+
+.formfill-answer-row { @apply border-b border-gray-100 pb-2 last:border-0 last:pb-0; }
+.formfill-answer-label { @apply text-xs font-medium text-gray-400 mb-0.5; }
+.formfill-answer-value { @apply text-sm text-gray-800; }
+
+.formfill-already-submitted-banner {
+  @apply mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200
+         text-amber-800 text-sm font-medium;
+}

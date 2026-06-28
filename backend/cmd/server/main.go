@@ -104,6 +104,7 @@ func main() {
 		protectedAPI.GET("/forms/:id/submissions", auth.RequireAnyRole("admin", "form_builder"), submissionHandler.ListSubmissions)
 		protectedAPI.GET("/forms/:id/submissions/:submissionId", auth.RequireAnyRole("admin", "form_builder"), submissionHandler.GetSubmission)
 		protectedAPI.DELETE("/forms/:id/submissions/:submissionId", auth.RequireAnyRole("admin", "form_builder"), submissionHandler.DeleteSubmission)
+		protectedAPI.GET("/forms/:id/my-submission", submissionHandler.GetMySubmission)
 	}
 
 	// Create default tenant if it doesn't exist

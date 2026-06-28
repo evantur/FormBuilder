@@ -90,6 +90,10 @@ class ApiClient {
   getSubmissionById(formId: string, submissionId: string): Promise<Submission> {
     return this.client.get(`/forms/${formId}/submissions/${submissionId}`).then(res => res.data);
   }
+
+  getMySubmission(formId: string): Promise<any> {
+    return this.client.get(`/forms/${formId}/my-submission`).then(res => res.data);
+  }
 }
 
 export const apiClient = new ApiClient();

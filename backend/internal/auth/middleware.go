@@ -70,6 +70,21 @@ func TenantContext(c *gin.Context) (uuid.UUID, error) {
 	return id, nil
 }
 
+// EmailContext extracts email from request context
+func EmailContext(c *gin.Context) (string, error) {
+	email, exists := c.Get(ContextEmail)
+	if !exists {
+		return "", fmt.Errorf("email not found in context")
+	}
+
+	emailStr, ok := email.(string)
+	if !ok {
+		return "", fmt.Errorf("invalid email type")
+	}
+
+	return emailStr, nil
+}
+
 // UserContext extracts user ID from request context
 func UserContext(c *gin.Context) (uuid.UUID, error) {
 	userID, exists := c.Get(ContextUserID)
