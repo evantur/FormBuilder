@@ -70,6 +70,7 @@ docker-compose up
 - `GET /api/forms/:id/submissions` - List all submissions for a form (requires auth, admin/form_builder role)
 - `GET /api/forms/:id/submissions/:submissionId` - Get a specific submission (requires auth, admin/form_builder role)
 - `DELETE /api/forms/:id/submissions/:submissionId` - Delete a submission (requires auth, admin/form_builder role)
+- `GET /api/forms/:id/my-submission` - Get submissions related to the current user
 
 ## Health Check
 - `GET /api/health` - Health check endpoint (no auth required)

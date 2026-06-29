@@ -40,7 +40,7 @@ go run ./cmd/server/main.go
 
 Backend will run on `http://localhost:8080`
 
-#### Frontend (Phase 2)
+#### Frontend
 ```bash
 cd frontend
 npm install
@@ -58,15 +58,15 @@ Frontend will run on `http://localhost:3000`
 - **Handler Layer**: HTTP request handling
 - **Auth Layer**: JWT tokens and role-based access control
 
-### Key Features (Phase 1)
-✅ User authentication with JWT tokens
-✅ Tenant isolation at the database level
-✅ Form CRUD operations
-✅ Form submission tracking
-✅ Role-based access control (admin, form_builder, respondent)
-✅ PostgreSQL with JSONB for flexible form schemas
+### Key Features
+✅ User authentication with JWT tokens <br>
+✅ Tenant isolation at the database level <br>
+✅ Form CRUD operations <br>
+✅ Form submission tracking <br>
+✅ Role-based access control (admin, form_builder, respondent) <br>
+✅ PostgreSQL with JSONB for flexible form schemas <br>
 
-## API Endpoints (Phase 1)
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/login` - Login and get JWT token
@@ -114,20 +114,20 @@ DEFAULT_TENANT_ID=00000000-0000-0000-0000-000000000001
 
 ## Project Phases
 
-### Phase 1: Foundation ✅ (Current)
+### Phase 1: Foundation ✅
 - Backend API scaffold with Gin
 - PostgreSQL database setup
 - Core domain models
 - Authentication & RBAC
 - Basic CRUD endpoints
 
-### Phase 2: Frontend Foundation (Coming)
+### Phase 2: Frontend Foundation ✅
 - React + TypeScript setup
 - Form renderer component
 - Login and authentication UI
 - Form submission interface
 
-### Phase 3: Form Builder UI (Coming)
+### Phase 3: Form Builder UI ✅
 - Drag-and-drop form builder
 - Form field management
 - Form versioning
