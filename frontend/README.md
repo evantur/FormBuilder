@@ -52,13 +52,14 @@ VITE_API_TIMEOUT=10000
 
 ### Pages (`src/pages/`)
 - `Dashboard.tsx` - Main landing page
+- `FormBuilder.tsx` - Form creation page
 - `FormsList.tsx` - List of available forms
 - `FormFill.tsx` - Fill and submit a form
+- `Submissions.tsx` - Submissions page
 - `NotFound.tsx` - 404 page
 
-## Phase 2 Implementation
+## Key Features
 
-Phase 2 includes:
 - ✅ React setup with TypeScript and Vite
 - ✅ Authentication UI (Login page)
 - ✅ Protected routes
@@ -66,10 +67,8 @@ Phase 2 includes:
 - ✅ Basic pages (Dashboard, Forms List)
 - ✅ Form submission functionality
 - ✅ JWT token management
+- ✅ Form builder UI with drag-and-drop
+- ✅ Edit existing forms
+- ✅ View form submissions in table format
+- ✅ Export submissions (JSON, CSV, PDF)
 
-## Next Steps (Phase 3)
-
-- Form builder UI with drag-and-drop
-- Edit existing forms
-- View form submissions in table format
-- Export submissions (JSON, CSV, PDF)
