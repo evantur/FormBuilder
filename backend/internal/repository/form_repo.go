@@ -31,19 +31,28 @@ func (r *FormRepository) GetByID(tenantID, formID uuid.UUID) (*domain.Form, erro
 	return &form, nil
 }
 
-// ListByTenant retrieves all forms for a tenant
+// ListByTenant retrieves all non-archived forms for a tenant
 func (r *FormRepository) ListByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
 	var forms []domain.Form
-	if err := r.db.Where("tenant_id = ?", tenantID).Find(&forms).Error; err != nil {
+	if err := r.db.Where("tenant_id = ? AND is_archived = ?", tenantID, false).Find(&forms).Error; err != nil {
 		return nil, err
 	}
 	return forms, nil
 }
 
-// ListPublishedByTenant retrieves all published forms for a tenant
+// ListArchivedByTenant retrieves all archived forms for a tenant
+func (r *FormRepository) ListArchivedByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
+	var forms []domain.Form
+	if err := r.db.Where("tenant_id = ? AND is_archived = ?", tenantID, true).Find(&forms).Error; err != nil {
+		return nil, err
+	}
+	return forms, nil
+}
+
+// ListPublishedByTenant retrieves all published, non-archived forms for a tenant
 func (r *FormRepository) ListPublishedByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
 	var forms []domain.Form
-	if err := r.db.Where("tenant_id = ? AND status = ?", tenantID, domain.FormStatusPublished).Find(&forms).Error; err != nil {
+	if err := r.db.Where("tenant_id = ? AND status = ? AND is_archived = ?", tenantID, domain.FormStatusPublished, false).Find(&forms).Error; err != nil {
 		return nil, err
 	}
 	return forms, nil

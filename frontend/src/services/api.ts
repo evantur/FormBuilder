@@ -76,6 +76,18 @@ class ApiClient {
     return this.client.delete(`/forms/${id}`).then(() => undefined);
   }
 
+  getArchivedForms(): Promise<Form[]> {
+    return this.client.get('/forms/archived').then(res => res.data);
+  }
+
+  archiveForm(id: string): Promise<Form> {
+   return this.client.put(`/forms/${id}/archive`).then(res => res.data);
+  }
+
+  unarchiveForm(id: string): Promise<Form> {
+    return this.client.put(`/forms/${id}/unarchive`).then(res => res.data);
+  }
+
   // Submission endpoints
   submitForm(formId: string, request: SubmissionCreateRequest): Promise<Submission> {
     return this.client.post(`/forms/${formId}/submissions`, request).then(res => res.data);

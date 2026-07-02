@@ -98,6 +98,9 @@ func main() {
 		protectedAPI.GET("/forms/:id", formHandler.GetForm)
 		protectedAPI.PUT("/forms/:id", auth.RequireAnyRole("admin", "form_builder"), formHandler.UpdateForm)
 		protectedAPI.DELETE("/forms/:id", auth.RequireAnyRole("admin", "form_builder"), formHandler.DeleteForm)
+		protectedAPI.PUT("/forms/:id/archive", auth.RequireAnyRole("admin", "form_builder"), formHandler.ArchiveForm)
+		protectedAPI.PUT("/forms/:id/unarchive", auth.RequireAnyRole("admin", "form_builder"), formHandler.UnarchiveForm)
+		protectedAPI.GET("/forms/archived", auth.RequireAnyRole("admin", "form_builder"), formHandler.ListArchivedForms)
 
 		// Submission endpoints
 		protectedAPI.POST("/forms/:id/submissions", submissionHandler.CreateSubmission)

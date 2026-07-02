@@ -40,6 +40,7 @@ export interface Form {
   created_at: string;
   updated_at: string;
   submission_count: number;
+  is_archived: boolean;
 }
 
 export interface FormCreateRequest {

@@ -27,7 +27,6 @@ func (s *FormService) CreateForm(tenantID, userID uuid.UUID, title, description 
 		return nil, fmt.Errorf("form title is required")
 	}
 
-	// Convert fields to JSON
 	fieldsJSON, err := convertFieldsToJSON(fields)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert fields to JSON: %w", err)
@@ -40,6 +39,7 @@ func (s *FormService) CreateForm(tenantID, userID uuid.UUID, title, description 
 		Description: description,
 		Fields:      fieldsJSON,
 		Status:      domain.FormStatusDraft,
+		IsArchived:  false,
 		CreatedBy:   userID,
 	}
 
@@ -59,7 +59,7 @@ func (s *FormService) GetForm(tenantID, formID uuid.UUID) (*domain.Form, error) 
 	return form, nil
 }
 
-// ListForms lists all forms for a tenant
+// ListForms lists all non-archived forms for a tenant
 func (s *FormService) ListForms(tenantID uuid.UUID) ([]domain.Form, error) {
 	forms, err := s.repo.ListByTenant(tenantID)
 	if err != nil {
@@ -68,7 +68,16 @@ func (s *FormService) ListForms(tenantID uuid.UUID) ([]domain.Form, error) {
 	return forms, nil
 }
 
-// ListPublishedForms lists all published forms for a tenant
+// ListArchivedForms lists all archived forms for a tenant
+func (s *FormService) ListArchivedForms(tenantID uuid.UUID) ([]domain.Form, error) {
+	forms, err := s.repo.ListArchivedByTenant(tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list archived forms: %w", err)
+	}
+	return forms, nil
+}
+
+// ListPublishedForms lists all published, non-archived forms for a tenant
 func (s *FormService) ListPublishedForms(tenantID uuid.UUID) ([]domain.Form, error) {
 	forms, err := s.repo.ListPublishedByTenant(tenantID)
 	if err != nil {
@@ -87,15 +96,12 @@ func (s *FormService) UpdateForm(tenantID, formID uuid.UUID, title, description 
 	if title != "" {
 		form.Title = title
 	}
-
 	if description != "" {
 		form.Description = description
 	}
-
 	if status != "" && (status == domain.FormStatusDraft || status == domain.FormStatusPublished) {
 		form.Status = status
 	}
-
 	if len(fields) > 0 {
 		fieldsJSON, err := convertFieldsToJSON(fields)
 		if err != nil {
@@ -111,6 +117,36 @@ func (s *FormService) UpdateForm(tenantID, formID uuid.UUID, title, description 
 	return form, nil
 }
 
+// ArchiveForm marks a form as archived
+func (s *FormService) ArchiveForm(tenantID, formID uuid.UUID) (*domain.Form, error) {
+	form, err := s.repo.GetByID(tenantID, formID)
+	if err != nil {
+		return nil, fmt.Errorf("form not found: %w", err)
+	}
+
+	form.IsArchived = true
+	if err := s.repo.Update(form); err != nil {
+		return nil, fmt.Errorf("failed to archive form: %w", err)
+	}
+
+	return form, nil
+}
+
+// UnarchiveForm restores an archived form
+func (s *FormService) UnarchiveForm(tenantID, formID uuid.UUID) (*domain.Form, error) {
+	form, err := s.repo.GetByID(tenantID, formID)
+	if err != nil {
+		return nil, fmt.Errorf("form not found: %w", err)
+	}
+
+	form.IsArchived = false
+	if err := s.repo.Update(form); err != nil {
+		return nil, fmt.Errorf("failed to unarchive form: %w", err)
+	}
+
+	return form, nil
+}
+
 // PublishForm publishes a form
 func (s *FormService) PublishForm(tenantID, formID uuid.UUID) (*domain.Form, error) {
 	form, err := s.repo.GetByID(tenantID, formID)
@@ -119,7 +155,6 @@ func (s *FormService) PublishForm(tenantID, formID uuid.UUID) (*domain.Form, err
 	}
 
 	form.Status = domain.FormStatusPublished
-
 	if err := s.repo.Update(form); err != nil {
 		return nil, fmt.Errorf("failed to publish form: %w", err)
 	}
@@ -135,19 +170,13 @@ func (s *FormService) DeleteForm(tenantID, formID uuid.UUID) error {
 	return nil
 }
 
-// Helper function to convert FormField slice to JSON
 func convertFieldsToJSON(fields []domain.FormField) (datatypes.JSON, error) {
-	// For now, we'll marshal the fields as-is
-	// In a production system, you might want additional validation here
 	if len(fields) == 0 {
 		return datatypes.JSON("[]"), nil
 	}
-
-	// Marshal fields to JSON
 	data, err := json.Marshal(fields)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal fields: %w", err)
 	}
-
 	return datatypes.JSON(data), nil
 }
