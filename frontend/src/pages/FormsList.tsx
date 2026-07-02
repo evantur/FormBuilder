@@ -10,18 +10,23 @@ const FormsList: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [localForms, setLocalForms] = useState<Form[]>([]); // Have '[]' instead of 'forms' to handle empty forms case and avoid flicker on initial load
+  const [localForms, setLocalForms] = useState<Form[]>(forms);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => { setLocalForms(forms); }, [forms]);
 
   const handleCardClick = (form: Form) => {
-    navigate(user?.role === 'respondent' ? `/forms/${form.id}/fill` : `/forms/${form.id}/edit`);
+    if (user?.role === 'respondent') {
+      navigate(`/forms/${form.id}/fill`);
+    } else {
+      navigate(`/forms/${form.id}/edit`);
+    }
   };
 
   const handleDelete = async (e: React.MouseEvent, form: Form) => {
     e.stopPropagation();
+    if (form.submission_count > 0) return;
     if (!window.confirm(`Delete "${form.title}"? This cannot be undone.`)) return;
     setDeletingId(form.id);
     setDeleteError(null);
@@ -64,7 +69,7 @@ const FormsList: React.FC = () => {
         {error && <div className="error-banner"><div className="error-banner-text">{error}</div></div>}
         {deleteError && <div className="error-banner"><div className="error-banner-text">{deleteError}</div></div>}
 
-        {(localForms == null || localForms.length === 0) ? ( // If no forms, show empty state
+        {localForms.length === 0 ? (
           <div className="forms-empty">
             <p className="forms-empty-text">No forms available yet.</p>
             {user?.role !== 'respondent' && (
@@ -74,55 +79,58 @@ const FormsList: React.FC = () => {
             )}
           </div>
         ) : (
-          // Display forms in a grid
           <div className="forms-grid">
-            {localForms.map(form => (
-              <div key={form.id} className="form-card" onClick={() => handleCardClick(form)}>
-                <div className="form-card-inner">
-                  <div className="form-card-header">
-                    <div>
-                      <h3 className="form-card-title">{form.title}</h3>
-                      <p className="form-card-desc">{form.description || 'No description'}</p>
+            {localForms.map(form => {
+              const isLocked = (form.submission_count ?? 0) > 0;
+              return (
+                <div key={form.id} className="form-card" onClick={() => handleCardClick(form)}>
+                  <div className="form-card-inner">
+                    <div className="form-card-header">
+                      <div>
+                        <h3 className="form-card-title">{form.title}</h3>
+                        <p className="form-card-desc">{form.description || 'No description'}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={form.status === 'published' ? 'badge-published' : 'badge-draft'}>
+                          {form.status}
+                        </span>
+                        {isLocked && (
+                          <span className="badge bg-gray-100 text-gray-500" title="This form has submissions and is locked">
+                            🔒 locked
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className={form.status === 'published' ? 'badge-published' : 'badge-draft'}>
-                      {form.status}
-                    </span>
-                  </div>
 
-                  <div className="form-card-meta">
-                    <span>{form.fields.length} fields</span>
-                    <span>Created {new Date(form.created_at).toLocaleDateString()}</span>
-                  </div>
+                    <div className="form-card-meta">
+                      <span>{form.fields.length} fields</span>
+                      <span>Created {new Date(form.created_at).toLocaleDateString()}</span>
+                    </div>
 
-                  {user?.role !== 'respondent' && (
-                    <div className="form-card-actions">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/edit`); }}
-                        className="btn-link-blue"
-                      >Edit</button>
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/submissions`); }}
-                        className="btn-link-green"
-                      >Submissions</button>
-                      <button
-                        onClick={e => handleDelete(e, form)}
-                        disabled={deletingId === form.id}
-                        className="btn-link-red"
-                      >{deletingId === form.id ? 'Deleting…' : 'Delete'}</button>
-                    </div>
-                  )}
-                  {/* Respondents can only fill forms, so we show the "Fill Form" button only for them. */}
-                  {user?.role === 'respondent' && (
-                    <div className="form-card-actions">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/fill`); }}
-                        className="btn-link-blue"
-                      >Fill Form</button>
-                    </div>
-                  )}
+                    {user?.role !== 'respondent' && (
+                      <div className="form-card-actions">
+                        <button
+                          onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/edit`); }}
+                          className={isLocked ? 'btn-link-red opacity-40 cursor-not-allowed' : 'btn-link-blue'}
+                          disabled={isLocked}
+                          title={isLocked ? 'Form is locked — has submissions' : undefined}
+                        >Edit</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/submissions`); }}
+                          className="btn-link-green"
+                        >Submissions</button>
+                        <button
+                          onClick={e => handleDelete(e, form)}
+                          disabled={deletingId === form.id || isLocked}
+                          className={isLocked ? 'btn-link-red opacity-40 cursor-not-allowed' : 'btn-link-red'}
+                          title={isLocked ? 'Cannot delete — form has submissions' : undefined}
+                        >{deletingId === form.id ? 'Deleting…' : 'Delete'}</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

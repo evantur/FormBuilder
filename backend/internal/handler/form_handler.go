@@ -14,12 +14,16 @@ import (
 
 // FormHandler handles form endpoints
 type FormHandler struct {
-	formService *service.FormService
+	formService       *service.FormService
+	submissionService *service.SubmissionService
 }
 
 // NewFormHandler creates a new FormHandler
-func NewFormHandler(formService *service.FormService) *FormHandler {
-	return &FormHandler{formService: formService}
+func NewFormHandler(formService *service.FormService, submissionService *service.SubmissionService) *FormHandler {
+	return &FormHandler{
+		formService:       formService,
+		submissionService: submissionService,
+	}
 }
 
 // FormRequest represents a create/update form request
@@ -32,15 +36,16 @@ type FormRequest struct {
 
 // FormResponse represents a form response
 type FormResponse struct {
-	ID          string             `json:"id"`
-	TenantID    string             `json:"tenant_id"`
-	Title       string             `json:"title"`
-	Description string             `json:"description"`
-	Fields      []domain.FormField `json:"fields"`
-	Status      string             `json:"status"`
-	CreatedBy   string             `json:"created_by"`
-	CreatedAt   string             `json:"created_at"`
-	UpdatedAt   string             `json:"updated_at"`
+	ID             string             `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Title          string             `json:"title"`
+	Description    string             `json:"description"`
+	Fields         []domain.FormField `json:"fields"`
+	Status         string             `json:"status"`
+	CreatedBy      string             `json:"created_by"`
+	CreatedAt      string             `json:"created_at"`
+	UpdatedAt      string             `json:"updated_at"`
+	SubmissionCount int64             `json:"submission_count"`
 }
 
 // CreateForm creates a new form
@@ -69,7 +74,6 @@ func (h *FormHandler) CreateForm(c *gin.Context) {
 		return
 	}
 
-	// Unmarshal fields from JSON
 	var fields []domain.FormField
 	if err := json.Unmarshal(form.Fields, &fields); err != nil {
 		fields = []domain.FormField{}
@@ -108,22 +112,24 @@ func (h *FormHandler) GetForm(c *gin.Context) {
 		return
 	}
 
-	// Unmarshal fields from JSON
 	var fields []domain.FormField
 	if err := json.Unmarshal(form.Fields, &fields); err != nil {
 		fields = []domain.FormField{}
 	}
 
+	count, _ := h.submissionService.CountSubmissionsByForm(tenantID, formID)
+
 	c.JSON(http.StatusOK, FormResponse{
-		ID:          form.ID.String(),
-		TenantID:    form.TenantID.String(),
-		Title:       form.Title,
-		Description: form.Description,
-		Fields:      fields,
-		Status:      form.Status,
-		CreatedBy:   form.CreatedBy.String(),
-		CreatedAt:   form.CreatedAt.String(),
-		UpdatedAt:   form.UpdatedAt.String(),
+		ID:              form.ID.String(),
+		TenantID:        form.TenantID.String(),
+		Title:           form.Title,
+		Description:     form.Description,
+		Fields:          fields,
+		Status:          form.Status,
+		CreatedBy:       form.CreatedBy.String(),
+		CreatedAt:       form.CreatedAt.String(),
+		UpdatedAt:       form.UpdatedAt.String(),
+		SubmissionCount: count,
 	})
 }
 
@@ -148,16 +154,19 @@ func (h *FormHandler) ListForms(c *gin.Context) {
 			fields = []domain.FormField{}
 		}
 
+		count, _ := h.submissionService.CountSubmissionsByForm(tenantID, form.ID)
+
 		responses = append(responses, FormResponse{
-			ID:          form.ID.String(),
-			TenantID:    form.TenantID.String(),
-			Title:       form.Title,
-			Description: form.Description,
-			Fields:      fields,
-			Status:      form.Status,
-			CreatedBy:   form.CreatedBy.String(),
-			CreatedAt:   form.CreatedAt.String(),
-			UpdatedAt:   form.UpdatedAt.String(),
+			ID:              form.ID.String(),
+			TenantID:        form.TenantID.String(),
+			Title:           form.Title,
+			Description:     form.Description,
+			Fields:          fields,
+			Status:          form.Status,
+			CreatedBy:       form.CreatedBy.String(),
+			CreatedAt:       form.CreatedAt.String(),
+			UpdatedAt:       form.UpdatedAt.String(),
+			SubmissionCount: count,
 		})
 	}
 
@@ -178,6 +187,17 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 		return
 	}
 
+	// Block edits if the form already has submissions
+	count, err := h.submissionService.CountSubmissionsByForm(tenantID, formID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check submissions"})
+		return
+	}
+	if count > 0 {
+		c.JSON(http.StatusConflict, gin.H{"error": "this form has submissions and can no longer be edited"})
+		return
+	}
+
 	var req FormRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -190,7 +210,6 @@ func (h *FormHandler) UpdateForm(c *gin.Context) {
 		return
 	}
 
-	// Unmarshal fields from JSON
 	var fields []domain.FormField
 	if err := json.Unmarshal(form.Fields, &fields); err != nil {
 		fields = []domain.FormField{}
@@ -220,6 +239,17 @@ func (h *FormHandler) DeleteForm(c *gin.Context) {
 	formID, err := uuid.Parse(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid form_id"})
+		return
+	}
+
+	// Block deletion if the form has submissions
+	count, err := h.submissionService.CountSubmissionsByForm(tenantID, formID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to check submissions"})
+		return
+	}
+	if count > 0 {
+		c.JSON(http.StatusConflict, gin.H{"error": "this form has submissions and cannot be deleted"})
 		return
 	}
 

@@ -65,7 +65,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userSvc, tokenMgr, tenantSvc)
 	tenantHandler := handler.NewTenantHandler(tenantSvc)
-	formHandler := handler.NewFormHandler(formSvc)
+	formHandler := handler.NewFormHandler(formSvc, submissionSvc)
 	submissionHandler := handler.NewSubmissionHandler(submissionSvc)
 
 	// Initialize Gin router
