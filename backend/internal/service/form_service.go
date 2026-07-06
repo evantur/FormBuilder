@@ -100,6 +100,9 @@ func (s *FormService) UpdateForm(tenantID, formID uuid.UUID, title, description 
 		form.Description = description
 	}
 	if status != "" && (status == domain.FormStatusDraft || status == domain.FormStatusPublished) {
+		if form.Status == domain.FormStatusPublished && status == domain.FormStatusDraft {
+			return nil, fmt.Errorf("a published form cannot be reverted to draft")
+		}
 		form.Status = status
 	}
 	if len(fields) > 0 {
