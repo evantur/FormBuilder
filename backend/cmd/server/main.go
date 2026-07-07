@@ -56,7 +56,7 @@ func main() {
 	// Initialize services
 	tenantSvc := service.NewTenantService(tenantRepo)
 	userSvc := service.NewUserService(userRepo)
-	formSvc := service.NewFormService(formRepo)
+	formSvc := service.NewFormService(formRepo, submissionRepo)
 	submissionSvc := service.NewSubmissionService(submissionRepo)
 
 	// Initialize JWT token manager
@@ -65,7 +65,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userSvc, tokenMgr, tenantSvc)
 	tenantHandler := handler.NewTenantHandler(tenantSvc)
-	formHandler := handler.NewFormHandler(formSvc)
+	formHandler := handler.NewFormHandler(formSvc, submissionSvc)
 	submissionHandler := handler.NewSubmissionHandler(submissionSvc)
 
 	// Initialize Gin router
@@ -98,6 +98,10 @@ func main() {
 		protectedAPI.GET("/forms/:id", formHandler.GetForm)
 		protectedAPI.PUT("/forms/:id", auth.RequireAnyRole("admin", "form_builder"), formHandler.UpdateForm)
 		protectedAPI.DELETE("/forms/:id", auth.RequireAnyRole("admin", "form_builder"), formHandler.DeleteForm)
+		protectedAPI.PUT("/forms/:id/archive", auth.RequireAnyRole("admin", "form_builder"), formHandler.ArchiveForm)
+		protectedAPI.PUT("/forms/:id/unarchive", auth.RequireAnyRole("admin", "form_builder"), formHandler.UnarchiveForm)
+		protectedAPI.GET("/forms/archived", auth.RequireAnyRole("admin", "form_builder"), formHandler.ListArchivedForms)
+		protectedAPI.DELETE("/forms/:id/cascade", auth.RequireAnyRole("admin"), formHandler.CascadeDeleteForm)
 
 		// Submission endpoints
 		protectedAPI.POST("/forms/:id/submissions", submissionHandler.CreateSubmission)

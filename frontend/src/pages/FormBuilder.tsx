@@ -174,6 +174,7 @@ const FormBuilder: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [error, setError] = useState<string | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<'draft' | 'published' | ''>('');
 
   useEffect(() => {
     if (!id) return;
@@ -182,6 +183,7 @@ const FormBuilder: React.FC = () => {
         setTitle(form.title);
         setDescription(form.description ?? '');
         setFields(fromWireFields(form.fields as any));
+        setCurrentStatus(form.status as 'draft' | 'published');
       })
       .catch(() => setError('Failed to load form'))
       .finally(() => setLoading(false));
@@ -272,7 +274,9 @@ const FormBuilder: React.FC = () => {
         </div>
         <div className="builder-header-right">
           {error && <span className="builder-error-text">{error}</span>}
-          <button onClick={() => handleSave('draft')}      disabled={saving} className="builder-btn-draft">Save Draft</button>
+          {currentStatus !== 'published' && (
+            <button onClick={() => handleSave('draft')}      disabled={saving} className="builder-btn-draft">Save Draft</button>
+          )}
           <button onClick={() => handleSave('published')}  disabled={saving} className="builder-btn-publish">
             {saving ? 'Saving…' : 'Publish'}
           </button>

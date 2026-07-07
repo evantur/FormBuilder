@@ -31,19 +31,28 @@ func (r *FormRepository) GetByID(tenantID, formID uuid.UUID) (*domain.Form, erro
 	return &form, nil
 }
 
-// ListByTenant retrieves all forms for a tenant
+// ListByTenant retrieves all non-archived forms for a tenant
 func (r *FormRepository) ListByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
 	var forms []domain.Form
-	if err := r.db.Where("tenant_id = ?", tenantID).Find(&forms).Error; err != nil {
+	if err := r.db.Where("tenant_id = ? AND is_archived = ?", tenantID, false).Find(&forms).Error; err != nil {
 		return nil, err
 	}
 	return forms, nil
 }
 
-// ListPublishedByTenant retrieves all published forms for a tenant
+// ListArchivedByTenant retrieves all archived forms for a tenant
+func (r *FormRepository) ListArchivedByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
+	var forms []domain.Form
+	if err := r.db.Where("tenant_id = ? AND is_archived = ?", tenantID, true).Find(&forms).Error; err != nil {
+		return nil, err
+	}
+	return forms, nil
+}
+
+// ListPublishedByTenant retrieves all published, non-archived forms for a tenant
 func (r *FormRepository) ListPublishedByTenant(tenantID uuid.UUID) ([]domain.Form, error) {
 	var forms []domain.Form
-	if err := r.db.Where("tenant_id = ? AND status = ?", tenantID, domain.FormStatusPublished).Find(&forms).Error; err != nil {
+	if err := r.db.Where("tenant_id = ? AND status = ? AND is_archived = ?", tenantID, domain.FormStatusPublished, false).Find(&forms).Error; err != nil {
 		return nil, err
 	}
 	return forms, nil
@@ -57,4 +66,15 @@ func (r *FormRepository) Update(form *domain.Form) error {
 // Delete deletes a form with tenant scoping
 func (r *FormRepository) Delete(tenantID, formID uuid.UUID) error {
 	return r.db.Delete(&domain.Form{}, "id = ? AND tenant_id = ?", formID, tenantID).Error
+}
+
+// CascadeDelete deletes all submissions for a form then the form itself,
+// wrapped in a single transaction so either both succeed or neither does.
+func (r *FormRepository) CascadeDelete(tenantID, formID uuid.UUID, submissionRepo *SubmissionRepository) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := submissionRepo.DeleteByForm(tx, tenantID, formID); err != nil {
+			return err
+		}
+		return tx.Delete(&domain.Form{}, "id = ? AND tenant_id = ?", formID, tenantID).Error
+	})
 }

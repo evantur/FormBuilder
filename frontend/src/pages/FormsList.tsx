@@ -10,38 +10,215 @@ const FormsList: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [localForms, setLocalForms] = useState<Form[]>([]); // Have '[]' instead of 'forms' to handle empty forms case and avoid flicker on initial load
+  const [localForms, setLocalForms] = useState<Form[]>([]);
+  const [archivedForms, setArchivedForms] = useState<Form[]>([]);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [loadingArchived, setLoadingArchived] = useState(false);
 
   useEffect(() => { setLocalForms(forms); }, [forms]);
 
+  const isAdmin = user?.role === 'admin';
+
+  const loadArchived = async () => {
+    if (archivedForms.length > 0) return;
+    setLoadingArchived(true);
+    try {
+      const data = await apiClient.getArchivedForms();
+      setArchivedForms(data);
+    } catch {
+      setActionError('Failed to load archived forms');
+    } finally {
+      setLoadingArchived(false);
+    }
+  };
+
+  const toggleArchiveSection = () => {
+    if (!archiveOpen) loadArchived();
+    setArchiveOpen(prev => !prev);
+  };
+
   const handleCardClick = (form: Form) => {
-    navigate(user?.role === 'respondent' ? `/forms/${form.id}/fill` : `/forms/${form.id}/edit`);
+    if (user?.role === 'respondent') {
+      navigate(`/forms/${form.id}/fill`);
+    } else {
+      navigate(`/forms/${form.id}/edit`);
+    }
+  };
+
+  const handleArchive = async (e: React.MouseEvent, form: Form) => {
+    e.stopPropagation();
+    setArchivingId(form.id);
+    setActionError(null);
+    try {
+      await apiClient.archiveForm(form.id);
+      setLocalForms(prev => prev.filter(f => f.id !== form.id));
+      setArchivedForms([]);
+    } catch (err: any) {
+      setActionError(err.response?.data?.error || 'Failed to archive form');
+    } finally {
+      setArchivingId(null);
+    }
+  };
+
+  const handleUnarchive = async (e: React.MouseEvent, form: Form) => {
+    e.stopPropagation();
+    setArchivingId(form.id);
+    setActionError(null);
+    try {
+      const updated = await apiClient.unarchiveForm(form.id);
+      setArchivedForms(prev => prev.filter(f => f.id !== form.id));
+      setLocalForms(prev => [...prev, updated]);
+    } catch (err: any) {
+      setActionError(err.response?.data?.error || 'Failed to unarchive form');
+    } finally {
+      setArchivingId(null);
+    }
   };
 
   const handleDelete = async (e: React.MouseEvent, form: Form) => {
     e.stopPropagation();
+    if (form.submission_count > 0) return;
     if (!window.confirm(`Delete "${form.title}"? This cannot be undone.`)) return;
     setDeletingId(form.id);
-    setDeleteError(null);
+    setActionError(null);
     try {
       await apiClient.deleteForm(form.id);
       setLocalForms(prev => prev.filter(f => f.id !== form.id));
     } catch (err: any) {
-      setDeleteError(err.response?.data?.error || 'Failed to delete form');
+      setActionError(err.response?.data?.error || 'Failed to delete form');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleCascadeDelete = async (e: React.MouseEvent, form: Form) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `⚠️ Force delete "${form.title}"?\n\n` +
+      `This will permanently delete the form AND all ${form.submission_count} submission(s).\n\n` +
+      `This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    setDeletingId(form.id);
+    setActionError(null);
+    try {
+      await apiClient.cascadeDeleteForm(form.id);
+      setLocalForms(prev => prev.filter(f => f.id !== form.id));
+      setArchivedForms(prev => prev.filter(f => f.id !== form.id));
+    } catch (err: any) {
+      setActionError(err.response?.data?.error || 'Failed to force delete form');
     } finally {
       setDeletingId(null);
     }
   };
 
   if (isLoading) {
+    return <div className="loading-screen"><div className="loading-text">Loading forms...</div></div>;
+  }
+
+  const renderFormCard = (form: Form, archived = false) => {
+    const isLocked = (form.submission_count ?? 0) > 0;
+    const isDeleting = deletingId === form.id;
+
     return (
-      <div className="loading-screen">
-        <div className="loading-text">Loading forms...</div>
+      <div
+        key={form.id}
+        className={`form-card ${archived ? 'form-card-archived' : ''}`}
+        onClick={() => !archived && handleCardClick(form)}
+      >
+        <div className="form-card-inner">
+          <div className="form-card-header">
+            <div>
+              <h3 className="form-card-title">{form.title}</h3>
+              <p className="form-card-desc">{form.description || 'No description'}</p>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className={form.status === 'published' ? 'badge-published' : 'badge-draft'}>
+                {form.status}
+              </span>
+              {isLocked && !archived && (
+                <span className="badge bg-gray-100 text-gray-500">🔒 locked</span>
+              )}
+              {archived && (
+                <span className="badge bg-gray-100 text-gray-400">archived</span>
+              )}
+            </div>
+          </div>
+
+          <div className="form-card-meta">
+            <span>{form.fields.length} fields</span>
+            <span>Created {new Date(form.created_at).toLocaleDateString()}</span>
+          </div>
+
+          {user?.role !== 'respondent' && (
+            <div className="form-card-actions">
+              {archived ? (
+                <>
+                  <button
+                    onClick={e => handleUnarchive(e, form)}
+                    disabled={archivingId === form.id}
+                    className="btn-link-blue"
+                  >
+                    {archivingId === form.id ? 'Restoring…' : 'Unarchive'}
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={e => handleCascadeDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                      title="Permanently delete this form and all its submissions"
+                    >
+                      {isDeleting ? 'Deleting…' : '⚠ Force Delete'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/edit`); }}
+                    className={isLocked ? 'btn-link-red opacity-40 cursor-not-allowed' : 'btn-link-blue'}
+                    disabled={isLocked}
+                    title={isLocked ? 'Form is locked — has submissions' : undefined}
+                  >Edit</button>
+                  <button
+                    onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/submissions`); }}
+                    className="btn-link-green"
+                  >Submissions</button>
+                  <button
+                    onClick={e => handleArchive(e, form)}
+                    disabled={archivingId === form.id}
+                    className="btn-link-red"
+                  >
+                    {archivingId === form.id ? 'Archiving…' : 'Archive'}
+                  </button>
+                  {!isLocked && (
+                    <button
+                      onClick={e => handleDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                    >{isDeleting ? 'Deleting…' : 'Delete'}</button>
+                  )}
+                  {isLocked && isAdmin && (
+                    <button
+                      onClick={e => handleCascadeDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                      title="Permanently delete this form and all its submissions"
+                    >
+                      {isDeleting ? 'Deleting…' : '⚠ Force Delete'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="page">
@@ -61,10 +238,10 @@ const FormsList: React.FC = () => {
       </header>
 
       <main className="page-main">
+        {actionError && <div className="error-banner"><div className="error-banner-text">{actionError}</div></div>}
         {error && <div className="error-banner"><div className="error-banner-text">{error}</div></div>}
-        {deleteError && <div className="error-banner"><div className="error-banner-text">{deleteError}</div></div>}
 
-        {(localForms == null || localForms.length === 0) ? ( // If no forms, show empty state
+        {localForms.length === 0 ? (
           <div className="forms-empty">
             <p className="forms-empty-text">No forms available yet.</p>
             {user?.role !== 'respondent' && (
@@ -74,55 +251,29 @@ const FormsList: React.FC = () => {
             )}
           </div>
         ) : (
-          // Display forms in a grid
           <div className="forms-grid">
-            {localForms.map(form => (
-              <div key={form.id} className="form-card" onClick={() => handleCardClick(form)}>
-                <div className="form-card-inner">
-                  <div className="form-card-header">
-                    <div>
-                      <h3 className="form-card-title">{form.title}</h3>
-                      <p className="form-card-desc">{form.description || 'No description'}</p>
-                    </div>
-                    <span className={form.status === 'published' ? 'badge-published' : 'badge-draft'}>
-                      {form.status}
-                    </span>
-                  </div>
+            {localForms.map(form => renderFormCard(form, false))}
+          </div>
+        )}
 
-                  <div className="form-card-meta">
-                    <span>{form.fields.length} fields</span>
-                    <span>Created {new Date(form.created_at).toLocaleDateString()}</span>
+        {user?.role !== 'respondent' && (
+          <div className="archived-section">
+            <button className="archived-toggle" onClick={toggleArchiveSection}>
+              <span>{archiveOpen ? '▾' : '▸'} Archived Forms</span>
+            </button>
+            {archiveOpen && (
+              <div className="archived-content">
+                {loadingArchived ? (
+                  <p className="text-sm text-gray-400 mt-4">Loading archived forms…</p>
+                ) : archivedForms.length === 0 ? (
+                  <p className="text-sm text-gray-400 mt-4">No archived forms.</p>
+                ) : (
+                  <div className="forms-grid mt-4">
+                    {archivedForms.map(form => renderFormCard(form, true))}
                   </div>
-
-                  {user?.role !== 'respondent' && (
-                    <div className="form-card-actions">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/edit`); }}
-                        className="btn-link-blue"
-                      >Edit</button>
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/submissions`); }}
-                        className="btn-link-green"
-                      >Submissions</button>
-                      <button
-                        onClick={e => handleDelete(e, form)}
-                        disabled={deletingId === form.id}
-                        className="btn-link-red"
-                      >{deletingId === form.id ? 'Deleting…' : 'Delete'}</button>
-                    </div>
-                  )}
-                  {/* Respondents can only fill forms, so we show the "Fill Form" button only for them. */}
-                  {user?.role === 'respondent' && (
-                    <div className="form-card-actions">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/forms/${form.id}/fill`); }}
-                        className="btn-link-blue"
-                      >Fill Form</button>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            ))}
+            )}
           </div>
         )}
       </main>

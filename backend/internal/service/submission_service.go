@@ -70,6 +70,11 @@ func (s *SubmissionService) GetSubmissionByFormAndUser(tenantID, formID uuid.UUI
 	return submission, nil
 }
 
+// CountSubmissionsByForm returns the number of submissions for a form
+func (s *SubmissionService) CountSubmissionsByForm(tenantID, formID uuid.UUID) (int64, error) {
+	return s.repo.CountByForm(tenantID, formID)
+}
+
 // ListSubmissionsByForm lists all submissions for a form
 func (s *SubmissionService) ListSubmissionsByForm(tenantID, formID uuid.UUID) ([]domain.Submission, error) {
 	submissions, err := s.repo.ListByForm(tenantID, formID)

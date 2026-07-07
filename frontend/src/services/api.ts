@@ -72,8 +72,26 @@ class ApiClient {
     return this.client.put(`/forms/${id}`, request).then(res => res.data);
   }
 
+  // Delete a form that doesn't have any submissions
   deleteForm(id: string): Promise<void> {
     return this.client.delete(`/forms/${id}`).then(() => undefined);
+  }
+
+  // Cascade delete form along with its submissions
+  cascadeDeleteForm(id: string): Promise<void> {
+    return this.client.delete(`/forms/${id}/cascade`).then(() => undefined);
+  }
+
+  getArchivedForms(): Promise<Form[]> {
+    return this.client.get('/forms/archived').then(res => res.data);
+  }
+
+  archiveForm(id: string): Promise<Form> {
+   return this.client.put(`/forms/${id}/archive`).then(res => res.data);
+  }
+
+  unarchiveForm(id: string): Promise<Form> {
+    return this.client.put(`/forms/${id}/unarchive`).then(res => res.data);
   }
 
   // Submission endpoints

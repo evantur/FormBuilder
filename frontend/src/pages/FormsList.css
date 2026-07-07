@@ -8,35 +8,33 @@
   @apply bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer;
 }
 
-.form-card-inner {
-  @apply p-6;
+.form-card-archived {
+  @apply opacity-60 cursor-default;
 }
 
-.form-card-header {
-  @apply flex items-start justify-between;
-}
-
-.form-card-title {
-  @apply text-lg font-medium text-gray-900;
-}
-
-.form-card-desc {
-  @apply mt-2 text-sm text-gray-600 line-clamp-2;
-}
+.form-card-inner  { @apply p-6; }
+.form-card-header { @apply flex items-start justify-between; }
+.form-card-title  { @apply text-lg font-medium text-gray-900; }
+.form-card-desc   { @apply mt-2 text-sm text-gray-600 line-clamp-2; }
 
 .form-card-meta {
   @apply mt-4 pt-4 border-t border-gray-100 flex justify-between items-center
          text-sm text-gray-500;
 }
 
-.form-card-actions {
-  @apply mt-4 space-x-3;
+.form-card-actions { @apply mt-4 space-x-3; }
+
+.forms-empty      { @apply text-center; }
+.forms-empty-text { @apply text-gray-600; }
+
+/* ─── Archived section ─────────────────────────────────── */
+.archived-section {
+  @apply mt-10 border-t border-gray-200 pt-6;
 }
 
-.forms-empty {
-  @apply text-center;
+.archived-toggle {
+  @apply flex items-center gap-2 text-sm font-medium text-gray-500
+         hover:text-gray-700 focus:outline-none;
 }
 
-.forms-empty-text {
-  @apply text-gray-600;
-}
+.archived-content { @apply mt-2; }
