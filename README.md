@@ -12,37 +12,33 @@ A full-stack system for creating, managing, and submitting dynamic forms. Design
 
 Top-level layout of the repository and important files/directories:
 
+
 ```
-docker-compose.yml
-README.md
-backend/
-  Dockerfile
-  go.mod
-  README.md
-  cmd/server/main.go
-  internal/
-    auth/ (middleware, rbac, token helpers)
-    config/ (configuration loader)
-    database/ (db connection, migrations)
-    domain/ (core entities)
-    handler/ (HTTP handlers)
-    repository/ (data access)
-    service/ (business logic)
-frontend/
-  Dockerfile
-  package.json
-  public/
-  src/
-    components/
-    context/
-    hooks/
-    pages/
-    services/
-    styles/
-    types/
-    utils/
-scripts/
-  seed_test_users.sh
+.
+├── docker-compose.yml
+├── README.md
+├── backend/
+│   ├── Dockerfile
+│   ├── go.mod
+│   ├── README.md
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go
+│   └── internal/
+│       ├── auth/         # middleware, rbac, token helpers
+│       ├── config/       # configuration loader
+│       ├── database/     # db connection, migrations
+│       ├── domain/       # core entities
+│       ├── handler/      # HTTP handlers
+│       ├── repository/   # data access
+│       └── service/      # business logic
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── public/
+│   └── src/              # React + TypeScript app (components, pages, services, types)
+└── scripts/
+    └── seed_test_users.sh
 ```
 
 This structure separates concerns between backend, frontend, and operational scripts to make development and deployment straightforward.
