@@ -13,12 +13,13 @@ import (
 
 // FormService handles form business logic
 type FormService struct {
-	repo *repository.FormRepository
+	repo           *repository.FormRepository
+	submissionRepo *repository.SubmissionRepository
 }
 
 // NewFormService creates a new FormService
-func NewFormService(repo *repository.FormRepository) *FormService {
-	return &FormService{repo: repo}
+func NewFormService(repo *repository.FormRepository, submissionRepo *repository.SubmissionRepository) *FormService {
+	return &FormService{repo: repo, submissionRepo: submissionRepo}
 }
 
 // CreateForm creates a new form
@@ -126,12 +127,10 @@ func (s *FormService) ArchiveForm(tenantID, formID uuid.UUID) (*domain.Form, err
 	if err != nil {
 		return nil, fmt.Errorf("form not found: %w", err)
 	}
-
 	form.IsArchived = true
 	if err := s.repo.Update(form); err != nil {
 		return nil, fmt.Errorf("failed to archive form: %w", err)
 	}
-
 	return form, nil
 }
 
@@ -141,12 +140,10 @@ func (s *FormService) UnarchiveForm(tenantID, formID uuid.UUID) (*domain.Form, e
 	if err != nil {
 		return nil, fmt.Errorf("form not found: %w", err)
 	}
-
 	form.IsArchived = false
 	if err := s.repo.Update(form); err != nil {
 		return nil, fmt.Errorf("failed to unarchive form: %w", err)
 	}
-
 	return form, nil
 }
 
@@ -156,19 +153,26 @@ func (s *FormService) PublishForm(tenantID, formID uuid.UUID) (*domain.Form, err
 	if err != nil {
 		return nil, fmt.Errorf("form not found: %w", err)
 	}
-
 	form.Status = domain.FormStatusPublished
 	if err := s.repo.Update(form); err != nil {
 		return nil, fmt.Errorf("failed to publish form: %w", err)
 	}
-
 	return form, nil
 }
 
-// DeleteForm deletes a form
+// DeleteForm deletes a form (only allowed when no submissions exist)
 func (s *FormService) DeleteForm(tenantID, formID uuid.UUID) error {
 	if err := s.repo.Delete(tenantID, formID); err != nil {
 		return fmt.Errorf("failed to delete form: %w", err)
+	}
+	return nil
+}
+
+// CascadeDeleteForm deletes all submissions for a form then the form itself,
+// in a single transaction. Admin-only — enforced at the route level.
+func (s *FormService) CascadeDeleteForm(tenantID, formID uuid.UUID) error {
+	if err := s.repo.CascadeDelete(tenantID, formID, s.submissionRepo); err != nil {
+		return fmt.Errorf("failed to cascade delete form: %w", err)
 	}
 	return nil
 }

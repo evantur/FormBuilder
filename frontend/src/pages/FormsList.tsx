@@ -20,8 +20,10 @@ const FormsList: React.FC = () => {
 
   useEffect(() => { setLocalForms(forms); }, [forms]);
 
+  const isAdmin = user?.role === 'admin';
+
   const loadArchived = async () => {
-    if (archivedForms.length > 0) return; // already loaded
+    if (archivedForms.length > 0) return;
     setLoadingArchived(true);
     try {
       const data = await apiClient.getArchivedForms();
@@ -53,7 +55,6 @@ const FormsList: React.FC = () => {
     try {
       await apiClient.archiveForm(form.id);
       setLocalForms(prev => prev.filter(f => f.id !== form.id));
-      // Reset archived list so it reloads next time the section is opened
       setArchivedForms([]);
     } catch (err: any) {
       setActionError(err.response?.data?.error || 'Failed to archive form');
@@ -93,12 +94,35 @@ const FormsList: React.FC = () => {
     }
   };
 
+  const handleCascadeDelete = async (e: React.MouseEvent, form: Form) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      `⚠️ Force delete "${form.title}"?\n\n` +
+      `This will permanently delete the form AND all ${form.submission_count} submission(s).\n\n` +
+      `This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    setDeletingId(form.id);
+    setActionError(null);
+    try {
+      await apiClient.cascadeDeleteForm(form.id);
+      setLocalForms(prev => prev.filter(f => f.id !== form.id));
+      setArchivedForms(prev => prev.filter(f => f.id !== form.id));
+    } catch (err: any) {
+      setActionError(err.response?.data?.error || 'Failed to force delete form');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (isLoading) {
     return <div className="loading-screen"><div className="loading-text">Loading forms...</div></div>;
   }
 
   const renderFormCard = (form: Form, archived = false) => {
     const isLocked = (form.submission_count ?? 0) > 0;
+    const isDeleting = deletingId === form.id;
+
     return (
       <div
         key={form.id}
@@ -132,13 +156,25 @@ const FormsList: React.FC = () => {
           {user?.role !== 'respondent' && (
             <div className="form-card-actions">
               {archived ? (
-                <button
-                  onClick={e => handleUnarchive(e, form)}
-                  disabled={archivingId === form.id}
-                  className="btn-link-blue"
-                >
-                  {archivingId === form.id ? 'Restoring…' : 'Unarchive'}
-                </button>
+                <>
+                  <button
+                    onClick={e => handleUnarchive(e, form)}
+                    disabled={archivingId === form.id}
+                    className="btn-link-blue"
+                  >
+                    {archivingId === form.id ? 'Restoring…' : 'Unarchive'}
+                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={e => handleCascadeDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                      title="Permanently delete this form and all its submissions"
+                    >
+                      {isDeleting ? 'Deleting…' : '⚠ Force Delete'}
+                    </button>
+                  )}
+                </>
               ) : (
                 <>
                   <button
@@ -158,12 +194,23 @@ const FormsList: React.FC = () => {
                   >
                     {archivingId === form.id ? 'Archiving…' : 'Archive'}
                   </button>
-                  <button
-                    onClick={e => handleDelete(e, form)}
-                    disabled={deletingId === form.id || isLocked}
-                    className={isLocked ? 'btn-link-red opacity-40 cursor-not-allowed' : 'btn-link-red'}
-                    title={isLocked ? 'Cannot delete — form has submissions' : undefined}
-                  >{deletingId === form.id ? 'Deleting…' : 'Delete'}</button>
+                  {!isLocked && (
+                    <button
+                      onClick={e => handleDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                    >{isDeleting ? 'Deleting…' : 'Delete'}</button>
+                  )}
+                  {isLocked && isAdmin && (
+                    <button
+                      onClick={e => handleCascadeDelete(e, form)}
+                      disabled={isDeleting}
+                      className="btn-link-red"
+                      title="Permanently delete this form and all its submissions"
+                    >
+                      {isDeleting ? 'Deleting…' : '⚠ Force Delete'}
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -209,13 +256,11 @@ const FormsList: React.FC = () => {
           </div>
         )}
 
-        {/* Archived section — admins and form_builders only */}
         {user?.role !== 'respondent' && (
           <div className="archived-section">
             <button className="archived-toggle" onClick={toggleArchiveSection}>
               <span>{archiveOpen ? '▾' : '▸'} Archived Forms</span>
             </button>
-
             {archiveOpen && (
               <div className="archived-content">
                 {loadingArchived ? (

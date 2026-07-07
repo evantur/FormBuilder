@@ -260,7 +260,8 @@ func (h *FormHandler) UnarchiveForm(c *gin.Context) {
 	c.JSON(http.StatusOK, formToResponse(form, count))
 }
 
-// DeleteForm deletes a form
+// DeleteForm deletes a form that has no submissions.
+// If the form has submissions, it cannot be deleted and will return a 409 Conflict.
 func (h *FormHandler) DeleteForm(c *gin.Context) {
 	tenantID, err := auth.TenantContext(c)
 	if err != nil {
@@ -296,6 +297,29 @@ func (h *FormHandler) DeleteForm(c *gin.Context) {
 	}
 
 	if err := h.formService.DeleteForm(tenantID, formID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// CascadeDeleteForm permanently deletes a form and ALL its submissions.
+// Admin-only — enforced at the route level in main.go.
+func (h *FormHandler) CascadeDeleteForm(c *gin.Context) {
+	tenantID, err := auth.TenantContext(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	formID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid form_id"})
+		return
+	}
+
+	if err := h.formService.CascadeDeleteForm(tenantID, formID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

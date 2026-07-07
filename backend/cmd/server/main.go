@@ -56,7 +56,7 @@ func main() {
 	// Initialize services
 	tenantSvc := service.NewTenantService(tenantRepo)
 	userSvc := service.NewUserService(userRepo)
-	formSvc := service.NewFormService(formRepo)
+	formSvc := service.NewFormService(formRepo, submissionRepo)
 	submissionSvc := service.NewSubmissionService(submissionRepo)
 
 	// Initialize JWT token manager
@@ -101,6 +101,7 @@ func main() {
 		protectedAPI.PUT("/forms/:id/archive", auth.RequireAnyRole("admin", "form_builder"), formHandler.ArchiveForm)
 		protectedAPI.PUT("/forms/:id/unarchive", auth.RequireAnyRole("admin", "form_builder"), formHandler.UnarchiveForm)
 		protectedAPI.GET("/forms/archived", auth.RequireAnyRole("admin", "form_builder"), formHandler.ListArchivedForms)
+		protectedAPI.DELETE("/forms/:id/cascade", auth.RequireAnyRole("admin"), formHandler.CascadeDeleteForm)
 
 		// Submission endpoints
 		protectedAPI.POST("/forms/:id/submissions", submissionHandler.CreateSubmission)

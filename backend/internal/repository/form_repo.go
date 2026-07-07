@@ -67,3 +67,14 @@ func (r *FormRepository) Update(form *domain.Form) error {
 func (r *FormRepository) Delete(tenantID, formID uuid.UUID) error {
 	return r.db.Delete(&domain.Form{}, "id = ? AND tenant_id = ?", formID, tenantID).Error
 }
+
+// CascadeDelete deletes all submissions for a form then the form itself,
+// wrapped in a single transaction so either both succeed or neither does.
+func (r *FormRepository) CascadeDelete(tenantID, formID uuid.UUID, submissionRepo *SubmissionRepository) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := submissionRepo.DeleteByForm(tx, tenantID, formID); err != nil {
+			return err
+		}
+		return tx.Delete(&domain.Form{}, "id = ? AND tenant_id = ?", formID, tenantID).Error
+	})
+}

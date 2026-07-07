@@ -63,6 +63,12 @@ func (r *SubmissionRepository) Delete(tenantID, submissionID uuid.UUID) error {
 	return r.db.Delete(&domain.Submission{}, "id = ? AND tenant_id = ?", submissionID, tenantID).Error
 }
 
+// DeleteByForm deletes all submissions for a form within a tenant.
+// Intended for use inside a transaction for cascade deletes.
+func (r *SubmissionRepository) DeleteByForm(tx *gorm.DB, tenantID, formID uuid.UUID) error {
+	return tx.Delete(&domain.Submission{}, "tenant_id = ? AND form_id = ?", tenantID, formID).Error
+}
+
 // CountByForm counts submissions for a form
 func (r *SubmissionRepository) CountByForm(tenantID, formID uuid.UUID) (int64, error) {
 	var count int64
