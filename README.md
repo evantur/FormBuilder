@@ -68,6 +68,9 @@ Frontend will run on `http://localhost:3000`
 
 ## API Endpoints
 
+### Health
+- `GET /api/health` - Health check endpoint
+
 ### Authentication
 - `POST /api/auth/login` - Login and get JWT token
 
@@ -80,12 +83,17 @@ Frontend will run on `http://localhost:3000`
 - `GET /api/forms/:id` - Get form details
 - `PUT /api/forms/:id` - Update form (admin/form_builder only)
 - `DELETE /api/forms/:id` - Delete form (admin/form_builder only)
+- `PUT /api/forms/:id/archive` - Archive form (admin/form_builder only)
+- `PUT /api/forms/:id/unarchive` - Unarchive form (admin/form_builder only)
+- `GET /api/forms/archived` - List archived forms (admin/form_builder only)
+- `DELETE /api/forms/:id/cascade` - Cascade delete form and related data (admin only)
 
 ### Submissions
 - `POST /api/forms/:id/submissions` - Submit form response
 - `GET /api/forms/:id/submissions` - List submissions (admin/form_builder only)
 - `GET /api/forms/:id/submissions/:submissionId` - Get submission details
 - `DELETE /api/forms/:id/submissions/:submissionId` - Delete submission
+- `GET /api/forms/:id/my-submission` - Get the current user's submission
 
 ## Environment Variables
 
