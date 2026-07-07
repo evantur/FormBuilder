@@ -39,7 +39,7 @@ go run ./cmd/server/main.go
 
 Backend will run on `http://localhost:8080`
 
-#### Frontend (Phase 2)
+#### Frontend
 ```bash
 cd frontend
 npm install
@@ -57,7 +57,7 @@ Frontend will run on `http://localhost:3000`
 - **Handler Layer**: HTTP request handling
 - **Auth Layer**: JWT tokens and role-based access control
 
-### Key Features (Phase 1)
+### Key Features
 ✅ User authentication with JWT tokens
 ✅ Tenant isolation at the database level
 ✅ Form CRUD operations
@@ -65,7 +65,7 @@ Frontend will run on `http://localhost:3000`
 ✅ Role-based access control (admin, form_builder, respondent)
 ✅ PostgreSQL with JSONB for flexible form schemas
 
-## API Endpoints (Phase 1)
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/login` - Login and get JWT token
