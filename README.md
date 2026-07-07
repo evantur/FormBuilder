@@ -20,13 +20,22 @@ A full-stack system for creating, managing, and submitting dynamic forms. Design
 
 1. **Start the entire stack**:
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
 This will start:
 - PostgreSQL on port 5432
 - Go backend on port 8080
 - React frontend on port 3000
+
+2. **Seed test users** (in a separate terminal, once the stack is running):
+```bash
+./scripts/seed_test_users.sh
+```
+
+The app is then accessible at `http://localhost:3000`.
+
+---
 
 ### Manual Setup
 
@@ -38,7 +47,7 @@ go mod download
 go run ./cmd/server/main.go
 ```
 
-Backend will run on `http://localhost:8080`
+Backend will run on `http://localhost:8080`.
 
 #### Frontend
 ```bash
@@ -47,7 +56,57 @@ npm install
 npm run dev
 ```
 
-Frontend will run on `http://localhost:3000`
+Frontend will run on `http://localhost:3000`.
+
+---
+
+## Test Users
+
+The seed script creates two test accounts for local development, both with the password **`password123`**:
+
+| Email | Role | Capabilities |
+|---|---|---|
+| `admin@localhost` | admin | Create, edit, archive, and force-delete forms; view all submissions |
+| `respondent@localhost` | respondent | View published forms and submit responses (one per form) |
+
+### Running the seed script
+
+The script connects to the database using the same defaults as `docker-compose.yml`. Run it after the stack is up:
+
+```bash
+./scripts/seed_test_users.sh
+```
+
+It is safe to run multiple times — users are only inserted if they do not already exist.
+
+**Custom connection options** (if running the backend outside Docker):
+
+```bash
+./scripts/seed_test_users.sh \
+  --host localhost \
+  --port 5432 \
+  --user postgres \
+  --password postgres \
+  --db forms_db
+```
+
+**Running against the Docker Postgres container directly** (no local `psql` required):
+
+```bash
+docker exec -i forms_postgres psql -U postgres -d forms_db < scripts/seed_test_users.sh
+```
+
+Or exec into the container first:
+
+```bash
+docker exec -it forms_postgres bash
+# then inside the container:
+psql -U postgres -d forms_db
+```
+
+> **Note:** The script requires `psql` to be installed locally when run outside Docker. On macOS: `brew install libpq && brew link libpq --force`. On Ubuntu/Debian: `sudo apt install postgresql-client`.
+
+---
 
 ## Architecture
 
@@ -59,45 +118,52 @@ Frontend will run on `http://localhost:3000`
 - **Auth Layer**: JWT tokens and role-based access control
 
 ### Key Features
-✅ User authentication with JWT tokens <br>
-✅ Tenant isolation at the database level <br>
-✅ Form CRUD operations <br>
-✅ Form submission tracking <br>
-✅ Role-based access control (admin, form_builder, respondent) <br>
-✅ PostgreSQL with JSONB for flexible form schemas <br>
+✅ User authentication with JWT tokens  
+✅ Tenant isolation at the database level  
+✅ Drag-and-drop form builder  
+✅ Form submission tracking with one-submission-per-user enforcement  
+✅ Role-based access control (admin, form_builder, respondent)  
+✅ Form locking — forms with submissions cannot be edited  
+✅ Form archiving  
+✅ Admin cascade delete  
+✅ PostgreSQL with JSONB for flexible form schemas  
+
+---
 
 ## API Endpoints
 
 ### Health
-- `GET /api/health` - Health check endpoint
+- `GET /api/health` — Health check
 
 ### Authentication
-- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/login` — Login and receive JWT token
 
 ### Tenants
-- `GET /api/tenants/me` - Get current tenant info
+- `GET /api/tenants/me` — Get current tenant info
 
 ### Forms
-- `POST /api/forms` - Create form (admin/form_builder only)
-- `GET /api/forms` - List forms for tenant
-- `GET /api/forms/:id` - Get form details
-- `PUT /api/forms/:id` - Update form (admin/form_builder only)
-- `DELETE /api/forms/:id` - Delete form (admin/form_builder only)
-- `PUT /api/forms/:id/archive` - Archive form (admin/form_builder only)
-- `PUT /api/forms/:id/unarchive` - Unarchive form (admin/form_builder only)
-- `GET /api/forms/archived` - List archived forms (admin/form_builder only)
-- `DELETE /api/forms/:id/cascade` - Cascade delete form and related data (admin only)
+- `POST /api/forms` — Create form *(admin, form_builder)*
+- `GET /api/forms` — List active (non-archived) forms
+- `GET /api/forms/archived` — List archived forms *(admin, form_builder)*
+- `GET /api/forms/:id` — Get form details
+- `PUT /api/forms/:id` — Update form *(admin, form_builder; blocked once submissions exist)*
+- `DELETE /api/forms/:id` — Delete form *(admin, form_builder; blocked once submissions exist)*
+- `PUT /api/forms/:id/archive` — Archive form *(admin, form_builder)*
+- `PUT /api/forms/:id/unarchive` — Unarchive form *(admin, form_builder)*
+- `DELETE /api/forms/:id/cascade` — Force delete form and all submissions *(admin only)*
 
 ### Submissions
-- `POST /api/forms/:id/submissions` - Submit form response
-- `GET /api/forms/:id/submissions` - List submissions (admin/form_builder only)
-- `GET /api/forms/:id/submissions/:submissionId` - Get submission details
-- `DELETE /api/forms/:id/submissions/:submissionId` - Delete submission
-- `GET /api/forms/:id/my-submission` - Get the current user's submission
+- `POST /api/forms/:id/submissions` — Submit a form response *(one per user)*
+- `GET /api/forms/:id/submissions` — List all submissions *(admin, form_builder)*
+- `GET /api/forms/:id/submissions/:submissionId` — Get a single submission *(admin, form_builder)*
+- `DELETE /api/forms/:id/submissions/:submissionId` — Delete a submission *(admin, form_builder)*
+- `GET /api/forms/:id/my-submission` — Get the current user's own submission
+
+---
 
 ## Environment Variables
 
-Create a `.env` file in the root directory or each service folder:
+Create a `.env` file in the `backend/` directory (copy from `.env.example`):
 
 ```bash
 # Database
@@ -120,6 +186,8 @@ JWT_EXPIRY_HOURS=24
 DEFAULT_TENANT_ID=00000000-0000-0000-0000-000000000001
 ```
 
+---
+
 ## Project Phases
 
 ### Phase 1: Foundation ✅
@@ -138,8 +206,9 @@ DEFAULT_TENANT_ID=00000000-0000-0000-0000-000000000001
 ### Phase 3: Form Builder UI ✅
 - Drag-and-drop form builder
 - Form field management
-- Form versioning
-- Submission viewer with exports
+- Submission viewer
+- One-submission-per-user enforcement
+- Form locking, archiving, and cascade delete
 
 ### Phase 4: Advanced Features (Coming)
 - PDF export
@@ -147,24 +216,28 @@ DEFAULT_TENANT_ID=00000000-0000-0000-0000-000000000001
 - Admin panel for user management
 - Multi-database scaling support
 
+---
+
 ## Development
 
-### Stopping the Stack
+### Stopping the stack
 ```bash
 docker-compose down
 ```
 
-### Rebuilding Containers
+### Rebuilding containers after code changes
 ```bash
-docker-compose build
-docker-compose up
+docker-compose up --build
 ```
 
-### Viewing Logs
+### Viewing logs
 ```bash
-docker-compose logs backend
-docker-compose logs postgres
+docker-compose logs -f backend
+docker-compose logs -f postgres
+docker-compose logs -f frontend
 ```
+
+---
 
 ## Contributing
 
