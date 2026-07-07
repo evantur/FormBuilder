@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import { Form, FormCreateRequest, FormUpdateRequest } from '../types/form';
-import { Submission, SubmissionCreateRequest } from '../types/submission';
+import { Submission, SubmissionCreateRequest, SubmissionListResponse } from '../types/submission';
 import { AuthResponse, LoginRequest } from '../types/user';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
@@ -34,7 +34,6 @@ class ApiClient {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          // Token expired or invalid, clear localStorage
           localStorage.removeItem('access_token');
           localStorage.removeItem('user');
           localStorage.removeItem('tenant');
@@ -60,6 +59,10 @@ class ApiClient {
     return this.client.get('/forms').then(res => res.data);
   }
 
+  getArchivedForms(): Promise<Form[]> {
+    return this.client.get('/forms/archived').then(res => res.data);
+  }
+
   getFormById(id: string): Promise<Form> {
     return this.client.get(`/forms/${id}`).then(res => res.data);
   }
@@ -72,22 +75,18 @@ class ApiClient {
     return this.client.put(`/forms/${id}`, request).then(res => res.data);
   }
 
-  // Delete a form that doesn't have any submissions
+  // Delete a form that has no submissions
   deleteForm(id: string): Promise<void> {
     return this.client.delete(`/forms/${id}`).then(() => undefined);
   }
 
-  // Cascade delete form along with its submissions
+  // Permanently delete a form and all its submissions (admin only)
   cascadeDeleteForm(id: string): Promise<void> {
     return this.client.delete(`/forms/${id}/cascade`).then(() => undefined);
   }
 
-  getArchivedForms(): Promise<Form[]> {
-    return this.client.get('/forms/archived').then(res => res.data);
-  }
-
   archiveForm(id: string): Promise<Form> {
-   return this.client.put(`/forms/${id}/archive`).then(res => res.data);
+    return this.client.put(`/forms/${id}/archive`).then(res => res.data);
   }
 
   unarchiveForm(id: string): Promise<Form> {
@@ -99,17 +98,16 @@ class ApiClient {
     return this.client.post(`/forms/${formId}/submissions`, request).then(res => res.data);
   }
 
-  getFormSubmissions(formId: string, page = 1, pageSize = 50): Promise<any> {
-    return this.client.get(`/forms/${formId}/submissions`, {
-      params: { page, page_size: pageSize }
-    }).then(res => res.data);
+  getFormSubmissions(formId: string): Promise<SubmissionListResponse> {
+    return this.client.get(`/forms/${formId}/submissions`).then(res => res.data);
   }
 
   getSubmissionById(formId: string, submissionId: string): Promise<Submission> {
     return this.client.get(`/forms/${formId}/submissions/${submissionId}`).then(res => res.data);
   }
 
-  getMySubmission(formId: string): Promise<any> {
+  // Returns the current authenticated user's own submission for a form
+  getMySubmission(formId: string): Promise<Submission> {
     return this.client.get(`/forms/${formId}/my-submission`).then(res => res.data);
   }
 }

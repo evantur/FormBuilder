@@ -11,9 +11,5 @@ export interface SubmissionCreateRequest {
   data: Record<string, any>;
 }
 
-export interface SubmissionListResponse {
-  submissions: Submission[];
-  total: number;
-  page: number;
-  page_size: number;
-}
+// The backend returns a flat array of submissions — no pagination wrapper.
+export type SubmissionListResponse = Submission[];

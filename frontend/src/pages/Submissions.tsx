@@ -20,7 +20,7 @@ const Submissions: React.FC = () => {
     setLoadingSubs(true);
     try {
       const data = await apiClient.getFormSubmissions(formId);
-      setSubmissions(data.submissions ?? data ?? []);
+      setSubmissions(data ?? []);
     } catch {
       setSubmissions([]);
     } finally {
