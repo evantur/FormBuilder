@@ -33,7 +33,10 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        const requestUrl = error.config?.url || '';
+        const isLoginRequest = requestUrl.includes('/auth/login');
+
+        if (error.response?.status === 401 && !isLoginRequest) {
           localStorage.removeItem('access_token');
           localStorage.removeItem('user');
           localStorage.removeItem('tenant');
