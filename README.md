@@ -8,6 +8,45 @@ A full-stack system for creating, managing, and submitting dynamic forms. Design
 - Multi-tenant support with JWT-based RBAC
 - Form exports (JSON, PDF, CSV) *(in progress)*
 
+### Project Structure
+
+Top-level layout of the repository and important files/directories:
+
+```
+docker-compose.yml
+README.md
+backend/
+  Dockerfile
+  go.mod
+  README.md
+  cmd/server/main.go
+  internal/
+    auth/ (middleware, rbac, token helpers)
+    config/ (configuration loader)
+    database/ (db connection, migrations)
+    domain/ (core entities)
+    handler/ (HTTP handlers)
+    repository/ (data access)
+    service/ (business logic)
+frontend/
+  Dockerfile
+  package.json
+  public/
+  src/
+    components/
+    context/
+    hooks/
+    pages/
+    services/
+    styles/
+    types/
+    utils/
+scripts/
+  seed_test_users.sh
+```
+
+This structure separates concerns between backend, frontend, and operational scripts to make development and deployment straightforward.
+
 ## Getting Started
 
 ### Prerequisites
