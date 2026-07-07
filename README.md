@@ -6,7 +6,7 @@ A full-stack system for creating, managing, and submitting dynamic forms. Design
 - Backend: Go/Gin API with PostgreSQL
 - Frontend: React/TypeScript
 - Multi-tenant support with JWT-based RBAC
-- Form exports (JSON, PDF, CSV)
+- Form exports (JSON, PDF, CSV) *(in progress)*
 
 ## Getting Started
 
