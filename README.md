@@ -65,8 +65,15 @@ This will start:
 - React frontend on port 3000
 
 2. **Seed test users** (in a separate terminal, once the stack is running):
+
+MacOS:
 ```bash
 ./scripts/seed_test_users.sh
+```
+Windows:
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+./scripts/seed_test_users.ps1
 ```
 
 The app is then accessible at `http://localhost:3000`.
