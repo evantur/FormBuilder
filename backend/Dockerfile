@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for building and running the Go backend
 
 # Build stage
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26.5 AS builder
 
 WORKDIR /app
 
