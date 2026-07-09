@@ -6,7 +6,43 @@ A full-stack system for creating, managing, and submitting dynamic forms. Design
 - Backend: Go/Gin API with PostgreSQL
 - Frontend: React/TypeScript
 - Multi-tenant support with JWT-based RBAC
-- Form exports (JSON, PDF, CSV)
+- Form exports (JSON, PDF, CSV) *(in progress)*
+
+### Project Structure
+
+Top-level layout of the repository and important files/directories:
+
+
+```
+.
+├── docker-compose.yml
+├── README.md
+├── backend/
+│   ├── Dockerfile
+│   ├── go.mod
+│   ├── README.md
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go
+│   └── internal/
+│       ├── auth/         # middleware, rbac, token helpers
+│       ├── config/       # configuration loader
+│       ├── database/     # db connection, migrations
+│       ├── domain/       # core entities
+│       ├── handler/      # HTTP handlers
+│       ├── repository/   # data access
+│       └── service/      # business logic
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── public/
+│   └── src/              # React + TypeScript app (components, pages, services, types)
+└── scripts/
+  ├── seed_test_users.ps1
+  └── seed_test_users.sh
+```
+
+This structure separates concerns between backend, frontend, and operational scripts to make development and deployment straightforward.
 
 ## Getting Started
 
@@ -29,8 +65,15 @@ This will start:
 - React frontend on port 3000
 
 2. **Seed test users** (in a separate terminal, once the stack is running):
+
+MacOS:
 ```bash
 ./scripts/seed_test_users.sh
+```
+Windows:
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+./scripts/seed_test_users.ps1
 ```
 
 The app is then accessible at `http://localhost:3000`.
@@ -77,6 +120,13 @@ The script connects to the database using the same defaults as `docker-compose.y
 ./scripts/seed_test_users.sh
 ```
 
+Windows users can run the PowerShell version instead:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+./scripts/seed_test_users.ps1
+```
+
 It is safe to run multiple times — users are only inserted if they do not already exist.
 
 **Custom connection options** (if running the backend outside Docker):
@@ -88,6 +138,17 @@ It is safe to run multiple times — users are only inserted if they do not alre
   --user postgres \
   --password postgres \
   --db forms_db
+```
+
+PowerShell uses the same flags, for example:
+
+```powershell
+./scripts/seed_test_users.ps1 `
+  -Host localhost `
+  -Port 5432 `
+  -User postgres `
+  -Password postgres `
+  -Database forms_db
 ```
 
 **Running against the Docker Postgres container directly** (no local `psql` required):

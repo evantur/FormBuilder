@@ -58,6 +58,58 @@ VITE_API_TIMEOUT=10000
 - `Submissions.tsx` - Submissions page
 - `NotFound.tsx` - 404 page
 
+## Project Structure
+
+Detailed layout of the frontend directory and important files:
+
+```
+frontend/
+├── Dockerfile
+├── package.json
+├── public/
+│   ├── index.html
+│   └── (static assets)
+├── src/
+│   ├── main.tsx             # Vite entry - mounts the app
+│   ├── App.tsx              # Top-level app/routes
+│   ├── index.css
+│   ├── components/          # Reusable UI components
+│   │   ├── Auth/
+│   │   │   ├── Login.tsx
+│   │   │   └── ProtectedRoute.tsx
+│   │   ├── Common/
+│   │   │   └── Logo.tsx
+│   │   └── FormRenderer/
+│   │       └── FormRenderer.tsx
+│   ├── context/
+│   │   └── AuthContext.tsx  # Global auth state/provider
+│   ├── hooks/
+│   │   ├── index.ts
+│   │   └── useForms.ts      # Form-related hooks
+│   ├── pages/               # Route-mounted pages
+│   │   ├── Dashboard.tsx
+│   │   ├── FormsList.tsx
+│   │   ├── FormBuilder.tsx
+│   │   ├── FormFill.tsx
+│   │   ├── Submissions.tsx
+│   │   └── NotFound.tsx
+│   ├── services/            # API clients and business services
+│   │   ├── api.ts           # Axios client with interceptors
+│   │   ├── auth.service.ts
+│   │   └── form.service.ts
+│   ├── styles/
+│   │   └── shared.css
+│   ├── types/               # TypeScript types/interfaces
+│   │   ├── api.ts
+│   │   ├── form.ts
+│   │   ├── submission.ts
+│   │   └── user.ts
+│   └── utils/               # Small utilities/helpers
+└── README.md
+```
+
+This mirrors the backend's separation of concerns and keeps UI code organized by feature.
+
 ## Key Features
 
 - ✅ React setup with TypeScript and Vite
