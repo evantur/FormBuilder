@@ -3,7 +3,7 @@ param(
   [string]$DbHost = $(if ([string]::IsNullOrWhiteSpace($env:DB_HOST)) { 'localhost' } else { $env:DB_HOST }),
   [string]$DbPort = $(if ([string]::IsNullOrWhiteSpace($env:DB_PORT)) { '5432' } else { $env:DB_PORT }),
   [string]$DbUser = $(if ([string]::IsNullOrWhiteSpace($env:DB_USER)) { 'postgres' } else { $env:DB_USER }),
-  [string]$DbPassword = $(if ([string]::IsNullOrWhiteSpace($env:DB_PASSWORD)) { 'postgres' } else { $env:DB_PASSWORD }),
+  [System.Security.SecureString]$DbPassword = $(if ([string]::IsNullOrWhiteSpace($env:DB_PASSWORD)) { ConvertTo-SecureString 'postgres' -AsPlainText -Force } else { ConvertTo-SecureString $env:DB_PASSWORD -AsPlainText -Force }),
   [string]$DbName = $(if ([string]::IsNullOrWhiteSpace($env:DB_NAME)) { 'forms_db' } else { $env:DB_NAME }),
   [string]$TenantId = $(if ([string]::IsNullOrWhiteSpace($env:DEFAULT_TENANT_ID)) { '00000000-0000-0000-0000-000000000001' } else { $env:DEFAULT_TENANT_ID })
 )
